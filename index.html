@@ -21,65 +21,68 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="nav">
-    <a class="nav-brand" href="./"><img src="img/maizekit-favicon.svg" alt="">MaizeKit</a>
-    <nav>
-      <a href="#how">How it works</a>
-      <a href="docs/">Docs</a>
-      <a href="https://github.com/MaizeKit/maizekit">GitHub</a>
-    </nav>
-  </header>
-
   <main>
-    <section class="hero">
-      <img class="hero-icon" src="img/maizekit-icon.svg" width="144" height="144" alt="MaizeKit icon">
+    <header>
+      <img class="icon" src="img/maizekit-icon.svg" width="56" height="56" alt="">
       <h1>MaizeKit</h1>
       <p class="lede">Turn a photo of a corn maze map into a phone app that shows where you are and the way out.</p>
-      <div class="cta">
-        <a class="btn btn-primary" href="https://github.com/MaizeKit/maizekit/generate">Use the template</a>
-        <a class="btn" href="https://maizekit.github.io/moore-family-farm/">See a live maze</a>
-      </div>
-      <p class="fine">Free and open source. Static files on GitHub Pages. No server, no accounts.</p>
+      <p class="links">
+        <a href="https://maizekit.github.io/moore-family-farm/">Try a live maze</a>
+        <a href="docs/">Documentation</a>
+        <a href="https://github.com/MaizeKit/maizekit">GitHub</a>
+      </p>
+    </header>
+
+    <section>
+      <h2>Why this exists</h2>
+      <p>In October 2026 a friend got turned around in the corn maze at Moore Family Farm in Groton, New York.
+        There was a map on a sign at the entrance, so we took a photo of it, lined it up with the field on
+        satellite imagery, and built a page that shows your GPS position on the maze and draws the way out.
+        She used it on her iPhone to walk to the exit.</p>
+      <p>MaizeKit is that page, cleaned up so any farm can make one.</p>
+
+      <figure class="pair">
+        <img src="img/sign-photo.jpg" width="900" height="1173" alt="The America 250 maze map on a sign at the entrance to Moore Family Farm's corn maze">
+        <img src="img/app-screenshot.jpg" width="500" height="900" alt="The same maze in the app, on satellite imagery, with a blue dot and a blue route to the exit">
+        <figcaption>The sign at the entrance, and the same maze in the app.</figcaption>
+      </figure>
     </section>
 
-    <section class="showcase">
-      <div class="phone"><img src="img/app-screenshot.jpg" width="500" height="900" alt="A corn maze on a satellite map with a blue dot and a blue route to the exit"></div>
-      <ul class="features">
-        <li><h3>You are here</h3><p>A blue dot on the maze map, from the phone's GPS.</p></li>
-        <li><h3>The way out, from anywhere</h3><p>A route along the maze's real paths to the exit, with distance and steps.</p></li>
-        <li><h3>Fix my spot</h3><p>GPS off by a row? Tap where you really are and the map lines up.</p></li>
-        <li><h3>Steady in the corn</h3><p>The route holds through GPS jitter instead of jumping between rows.</p></li>
-        <li><h3>Private by design</h3><p>Location stays on the phone. Nothing is sent or stored anywhere.</p></li>
-        <li><h3>Works on weak signal</h3><p>The app and the map tiles you've seen are saved on the phone.</p></li>
+    <section>
+      <h2>What it does</h2>
+      <ul>
+        <li>Shows a blue dot for where you are, from the phone's GPS.</li>
+        <li>Draws the way to the exit along the real paths, from wherever you're standing, with the distance.</li>
+        <li>Lets you tap <em>Fix my spot</em> when GPS puts you a row off.</li>
+        <li>Holds the route steady instead of jumping between rows as GPS wobbles.</li>
+        <li>Keeps your location on your phone. There's no server and nothing is stored.</li>
+        <li>Prints an entrance sign with a QR code for the farm's own address.</li>
       </ul>
     </section>
 
-    <section class="how" id="how">
-      <h2>How it works</h2>
-      <ol class="steps">
-        <li><span>1</span><h3>Photograph the map</h3><p>A straight-on photo of the maze sign at the entrance.</p></li>
-        <li><span>2</span><h3>Describe it</h3><p>In <code>maze.config.json</code>: the field outline, the entrance and exit, and four corners on the ground.</p></li>
-        <li><span>3</span><h3>Build</h3><p><code>python tools/build_assets.py</code> finds the paths and lines the map up with the real field.</p></li>
-        <li><span>4</span><h3>Publish</h3><p>Push to GitHub and turn on Pages. Share the link at the entrance.</p></li>
+    <section>
+      <h2>Making one for your maze</h2>
+      <ol>
+        <li>Make a copy of the <a href="https://github.com/MaizeKit/maizekit/generate">MaizeKit template</a> on GitHub.</li>
+        <li>Add a straight-on photo of the maze map and describe it in <code>maze.config.json</code>.</li>
+        <li>Run <code>python tools/build_assets.py</code> to find the paths and line the map up with the field.</li>
+        <li>Turn on GitHub Pages and print the entrance sign.</li>
       </ol>
-      <p class="center"><a class="btn" href="https://github.com/MaizeKit/maizekit#getting-started">Read the guide</a></p>
+      <p>The <a href="docs/documentation/maizekit/gettingstarted/">getting started guide</a> walks through each step.
+        It's free, and it runs as plain files on GitHub Pages.</p>
     </section>
 
-    <section class="built">
-      <h2>Built with MaizeKit</h2>
-      <a class="maze-card" href="https://maizekit.github.io/moore-family-farm/">
-        <img src="img/app-screenshot.jpg" alt="">
-        <div><h3>Moore Family Farm Corn Maze</h3><p>Groton, NY · 2026</p></div>
-      </a>
-      <p class="badge-line">Add the badge to yours:
-        <a href="https://github.com/MaizeKit/maizekit"><img src="brand/badge/built-with-maizekit.svg" alt="Built with MaizeKit" height="20"></a>
-      </p>
+    <section>
+      <h2>Mazes using it</h2>
+      <p><a href="https://maizekit.github.io/moore-family-farm/">Moore Family Farm</a>, Groton, NY, 2026.</p>
+      <p>Built one? Add the badge to your README:
+        <a class="badge" href="https://github.com/MaizeKit/maizekit"><img src="brand/badge/built-with-maizekit.svg" alt="Built with MaizeKit" width="152" height="20"></a></p>
     </section>
+
+    <footer>
+      <p><a href="https://github.com/MaizeKit">MaizeKit on GitHub</a> · <a href="brand/">Brand assets</a></p>
+      <p>Maps drawn with <a href="https://maplibre.org/">MapLibre GL JS</a>. Satellite imagery © Esri.</p>
+    </footer>
   </main>
-
-  <footer>
-    <p><a href="https://github.com/MaizeKit">MaizeKit on GitHub</a> · <a href="brand/">Brand</a></p>
-    <p class="fine">Maps drawn with <a href="https://maplibre.org/">MapLibre GL JS</a>. Satellite imagery © Esri.</p>
-  </footer>
 </body>
 </html>
