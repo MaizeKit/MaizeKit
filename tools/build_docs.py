@@ -1,4 +1,5 @@
-"""Generates the docs pages (docs/**/index.html) from a checkout of the MaizeKit kit repo.
+"""Generates a DocC documentation catalog (MaizeKit.docc) from a checkout of the MaizeKit kit repo.
+Render it with Apple's DocC:  docc convert MaizeKit.docc --output-path _site/docs ...
 
 Everything on the page comes from the kit itself, so the docs always match the code:
   README.md                 Overview and Getting started
@@ -149,49 +150,24 @@ def anchor(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 
-TOPICS = [
-    # slug, title, one-line summary
-    ("getting-started", "Getting started", "Make a site for your maze in six steps."),
-    ("configuration", "Configuration", "Every field in maze.config.json."),
-    ("errors", "Errors", "The messages visitors can see, and what they mean."),
-    ("settings", "Settings", "Values in app.js you can tune."),
-    ("reference", "Reference", "Every function in app.js, for contributors."),
-    ("build-tool", "Build tool", "How tools/build_assets.py turns a photo into a map."),
-]
+# ---------- DocC catalog ----------
+# Apple's documentation compiler (DocC) renders the catalog. Every article is generated
+# from the kit, so nothing here is written by hand except the topic names.
+
+OUT = Path("MaizeKit.docc")
 
 
-def page(title, abstract, body, meta, crumb=True):
-    """One docs page. Paths are site-absolute (the site is served from the domain root)."""
-    head = '<p class="eyebrow">Framework</p>' if not crumb else '<p class="eyebrow"><a href="/docs/">MaizeKit</a></p>'
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{esc(title)}{' | MaizeKit' if crumb else ' documentation'}</title>
-  <meta name="description" content="{esc(abstract)}">
-  <link rel="icon" href="/brand/maizekit-favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/style.css">
-  <link rel="stylesheet" href="/docs/docs.css">
-</head>
-<body>
-  <header class="nav">
-    <a class="nav-brand" href="/"><img src="/brand/maizekit-favicon.svg" alt="">MaizeKit</a>
-    <nav><a href="/docs/">Documentation</a><a href="{REPO}">GitHub</a></nav>
-  </header>
-  <main class="docs">
-    <div class="doc-head">{head}<h1>{esc(title)}</h1><p class="abstract">{inline(abstract)}</p>{meta}</div>
-{body}
-  </main>
-  <footer><p class="fine">{FOOTER}</p></footer>
-</body>
-</html>
-"""
+def article(name, title, abstract, body):
+    (OUT / f"{name}.md").write_text(f"# {title}\n\n{abstract}\n\n{body.strip()}\n")
 
 
-def render():
-    """Returns {output path: html} for every docs page."""
-    global FOOTER
+def md_table(head, rows):
+    esc_cell = lambda c: str(c).replace("|", "\\|").replace("\n", " ")
+    return "\n".join(["| " + " | ".join(head) + " |", "|" + "---|" * len(head)] +
+                     ["| " + " | ".join(esc_cell(c) for c in r) + " |" for r in rows])
+
+
+def build():
     readme = (KIT / "README.md").read_text()
     schema = json.loads((KIT / "maze.config.schema.json").read_text())
     app = (KIT / "app.js").read_text()
@@ -205,65 +181,80 @@ def render():
 
     tag = git("describe", "--tags", "--abbrev=0")
     version = tag.lstrip("v").removesuffix(".0") if tag else ""
-    commit = git("rev-parse", "--short", "HEAD")
     abstract = re.search(r"^\*\*(.+?)\*\*$", readme, re.M).group(1)
     sections, settings = parse_app(app)
     errors = parse_errors(app)
-    FOOTER = f"Generated from <a href='{REPO}'>MaizeKit</a>" + (f" {esc(tag)}" if tag else "") + \
-        (f" (<a href='{REPO}/commit/{commit}'><code>{commit}</code></a>)" if commit else "")
+    source = lambda path: f"{REPO}/blob/main/{path}"
 
-    pages = {}
+    if OUT.exists():
+        for f in OUT.glob("*.md"):
+            f.unlink()
+    (OUT / "Resources").mkdir(parents=True, exist_ok=True)
 
-    # Landing: summary, availability, one overview paragraph, topics.
-    availability = ('<div class="availability">' + (f'<span>MaizeKit {esc(version)}+</span>' if version else '') +
-                    '<span>Safari on iPhone</span><span>Chrome on Android</span></div>')
-    overview = readme_section(readme, "Overview").strip().split("\n\n")[0]
-    topics = "".join(f'<li><a href="/docs/{slug}/"><b>{esc(t)}</b><span>{esc(d)}</span></a></li>' for slug, t, d in TOPICS)
-    pages["docs/index.html"] = page("MaizeKit", abstract,
-        f'<section><h2>Overview</h2>{markdown(overview)}</section><section><h2>Topics</h2><ul class="topic-list">{topics}</ul></section>',
-        availability, crumb=False)
+    available = f'  @Available("MaizeKit", introduced: "{version}")\n' if version else ""
+    overview = readme_section(readme, "Overview").strip()
+    (OUT / "MaizeKit.md").write_text(f"""# MaizeKit
 
-    pages["docs/getting-started/index.html"] = page("Getting started", TOPICS[0][2],
-        markdown(readme_section(readme, "Getting started")) + "<h2>Entrance sign</h2>" + markdown(readme_section(readme, "Entrance sign")), "")
+@Metadata {{
+  @TechnologyRoot
+  @PageImage(purpose: icon, source: "maizekit-icon", alt: "MaizeKit icon")
+{available}}}
 
-    rows = "".join(
-        f'<tr><td><code>{k}</code></td><td>{"Required" if k in schema.get("required", []) else "Optional"}</td><td>{inline(p.get("description", ""))}</td></tr>'
-        for k, p in schema["properties"].items())
-    pages["docs/configuration/index.html"] = page("Configuration", TOPICS[1][2],
-        f'<p>{inline(schema.get("description", ""))}</p><table><thead><tr><th>Field</th><th></th><th>What it is</th></tr></thead><tbody>{rows}</tbody></table>'
-        f'<p>Start from <a href="{REPO}/blob/main/maze.config.example.json"><code>maze.config.example.json</code></a>. '
-        f'The format is defined in <a href="{REPO}/blob/main/maze.config.schema.json"><code>maze.config.schema.json</code></a>.</p>', "")
+{abstract}
 
-    err_rows = "".join(f"<tr><td><b>{esc(t)}</b></td><td>{esc(s)}</td></tr>" for t, s in errors)
-    pages["docs/errors/index.html"] = page("Errors", TOPICS[2][2],
-        f'<table><thead><tr><th>Message</th><th>What it tells the visitor</th></tr></thead><tbody>{err_rows}</tbody></table>', "")
+## Overview
 
-    set_rows = "".join(f"<tr><td><code>{esc(s['name'])}</code></td><td><code>{esc(s['value'])}</code></td><td>{inline(s['summary'])}</td></tr>" for s in settings)
-    pages["docs/settings/index.html"] = page("Settings", TOPICS[3][2],
-        f'<table><thead><tr><th>Name</th><th>Default</th><th>What it does</th></tr></thead><tbody>{set_rows}</tbody></table>', "")
+{overview}
 
-    ref = []
+## Topics
+
+### Essentials
+
+- <doc:GettingStarted>
+- <doc:Configuration>
+
+### Visitors
+
+- <doc:Errors>
+- <doc:Settings>
+
+### Contributing
+
+- <doc:Reference>
+- <doc:BuildTool>
+""")
+
+    article("GettingStarted", "Getting Started", "Make a site for your maze in six steps.",
+            readme_section(readme, "Getting started") + "\n## Entrance sign\n\n" + readme_section(readme, "Entrance sign"))
+
+    rows = [(f"`{k}`", "Required" if k in schema.get("required", []) else "Optional", p.get("description", ""))
+            for k, p in schema["properties"].items()]
+    article("Configuration", "Configuration", "Every field in `maze.config.json`.",
+            schema.get("description", "") + "\n\n" + md_table(["Field", "", "What it is"], rows) +
+            f"\n\nStart from [`maze.config.example.json`]({source('maze.config.example.json')}). "
+            f"The format is defined in [`maze.config.schema.json`]({source('maze.config.schema.json')}).")
+
+    article("Errors", "Errors", "The messages visitors can see, and what they mean.",
+            md_table(["Message", "What it tells the visitor"], [(f"**{t}**", s) for t, s in errors]))
+
+    article("Settings", "Settings", "Values in `app.js` you can tune.",
+            md_table(["Name", "Default", "What it does"], [(f"`{s['name']}`", f"`{s['value']}`", s["summary"]) for s in settings]))
+
+    ref = [f"From the doc comments in [`app.js`]({source('app.js')}), in file order."]
     for sec in sections:
-        items = []
-        for s in sec["symbols"]:
-            detail = ""
-            if s["params"] or s["returns"]:
-                params = "".join(f"<dt><code>{esc(n)}</code></dt><dd>{esc(t)} {inline(d)}</dd>" for t, n, d in s["params"])
-                ret = f"<dt>Returns</dt><dd>{esc(s['returns'][0])} {inline(s['returns'][1])}</dd>" if s["returns"] else ""
-                detail = f"<details><summary>Parameters</summary><pre><code>{esc(s['decl'])}</code></pre><dl>{params}{ret}</dl></details>"
-            items.append(f'<li id="{anchor(s["name"])}"><code>{esc(s["name"])}</code> {inline(s["summary"])}{detail}</li>')
-        ref.append(f'<h2>{esc(sec["title"])}</h2><ul class="symbols">{"".join(items)}</ul>')
-    pages["docs/reference/index.html"] = page("Reference", TOPICS[4][2],
-        f'<p>From the doc comments in <a href="{REPO}/blob/main/app.js"><code>app.js</code></a>, in file order.</p>{"".join(ref)}', "")
+        ref.append(f"\n## {sec['title']}\n")
+        for sym in sec["symbols"]:
+            ref.append(f"### `{sym['name']}`\n\n{sym['summary']}\n\n```js\n{sym['decl']}\n```\n")
+            if sym["params"]:
+                ref.append("\n".join(f"- term `{n}`: {d} ({t})".replace("- term ", "- ") for t, n, d in sym["params"]) + "\n")
+            if sym["returns"]:
+                ref.append(f"Returns `{sym['returns'][0]}`. {sym['returns'][1]}\n")
+    article("Reference", "Reference", "Every function in `app.js`, for contributors.", "\n".join(ref))
 
-    pages["docs/build-tool/index.html"] = page("Build tool", TOPICS[5][2],
-        f'<pre><code>{esc(build_doc)}</code></pre><p><a href="{REPO}/blob/main/tools/build_assets.py">View the source</a></p>', "")
-    return pages
+    article("BuildTool", "Build Tool", "How `tools/build_assets.py` turns a photo into a map.",
+            f"```\n{build_doc}\n```\n\n[View the source]({source('tools/build_assets.py')})")
+
+    print(f"wrote {OUT}/ ({len(list(OUT.glob('*.md')))} articles)")
 
 
-FOOTER = ""
-for path, text in render().items():
-    out = Path(path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(text)
-    print(f"wrote {out}")
+build()

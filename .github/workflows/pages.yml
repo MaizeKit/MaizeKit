@@ -1,4 +1,4 @@
-# Publishes the website, with docs generated from the latest MaizeKit kit.
+# Publishes the website, with DocC documentation generated from the latest MaizeKit kit.
 name: Publish site
 
 on:
@@ -33,11 +33,21 @@ jobs:
           path: _kit
           fetch-depth: 0 # tags, for the version shown in the docs
 
-      - name: Generate docs
+      - name: Copy the website
+        run: rsync -a --exclude _kit --exclude _site --exclude .git --exclude .github --exclude tools --exclude MaizeKit.docc ./ _site/
+
+      - name: Write the DocC catalog from the kit
         run: python3 tools/build_docs.py _kit
 
-      - name: Assemble site
-        run: rsync -a --exclude _kit --exclude .git --exclude .github --exclude tools ./ _site/
+      - name: Build docs with DocC
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w swift:6.0 \
+            docc convert MaizeKit.docc \
+              --fallback-display-name MaizeKit \
+              --fallback-bundle-identifier io.github.maizekit \
+              --transform-for-static-hosting --hosting-base-path docs \
+              --output-path _site/docs
+          sudo cp docs-redirect.html _site/docs/index.html
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

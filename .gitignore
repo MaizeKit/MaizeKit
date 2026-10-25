@@ -1,5 +1,4 @@
 .DS_Store
 _kit/
 _site/
-docs/**/index.html
-docs/index.html
+MaizeKit.docc/*.md
