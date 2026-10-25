@@ -1,0 +1,47 @@
+# Publishes the website, with docs generated from the latest MaizeKit kit.
+name: Publish site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 9 * * *" # daily, to pick up kit changes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get the kit
+        uses: actions/checkout@v4
+        with:
+          repository: MaizeKit/maizekit
+          path: _kit
+          fetch-depth: 0 # tags, for the version shown in the docs
+
+      - name: Generate docs
+        run: python3 tools/build_docs.py _kit
+
+      - name: Assemble site
+        run: rsync -a --exclude _kit --exclude .git --exclude .github --exclude tools ./ _site/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
