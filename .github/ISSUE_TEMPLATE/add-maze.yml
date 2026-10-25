@@ -1,0 +1,34 @@
+name: Add my maze
+description: Get a free MaizeKit page for your corn maze.
+title: "Add maze: "
+labels: [new maze]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! We'll set up a page that shows visitors where they are in your maze and the way out, and send you the link and a printable entrance sign with a QR code.
+  - type: input
+    id: farm
+    attributes:
+      label: Farm name
+    validations:
+      required: true
+  - type: input
+    id: address
+    attributes:
+      label: Farm address
+      description: So we can find the maze field on satellite imagery.
+    validations:
+      required: true
+  - type: textarea
+    id: map
+    attributes:
+      label: Maze map
+      description: Drag in a photo of this year's maze map, either the sign at the entrance (taken straight on) or an aerial photo. The larger the better.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Where the entrance and exit are, opening dates, anything that helps.

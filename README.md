@@ -23,12 +23,16 @@ visitors. Location is used on the phone and never sent anywhere.
 
 ## Getting started
 
-Each maze is one folder, `m/<farm>/`, with a photo of the maze map and a
-`maze.config.json` describing it.
+**Run a corn maze?** [Open an "Add my maze" request](https://github.com/MaizeKit/MaizeKit/issues/new?template=add-maze.yml)
+with a photo of your maze map (the sign at the entrance, or an aerial photo) and your farm's
+address. We'll set it up and send you the link. It's free.
+
+**Adding one yourself?** Each maze is one folder, `m/<farm>/`, with a photo of the maze
+map and a `maze.config.json` describing it.
 
 1. Add a straight-on photo of the maze map as `m/<farm>/sign-photo.png`.
 2. Describe it in `maze.config.json` next to it ([see Configuration](https://maizekit.github.io/docs/configuration/)).
-3. Open a pull request. Publishing checks that the maze builds and that its exit can be reached.
+3. Open a pull request. The build checks that the config is complete and that the exit can be reached from the entrance.
 4. Once merged, it's live at `https://maizekit.github.io/m/<farm>/`.
 
 Each season, replace the photo and config. The farm's link and printed sign stay the
@@ -52,6 +56,10 @@ Every maze gets a printable sign with a QR code for its address at
 `.github/workflows/pages.yml` builds every maze and the docs on every push to `main`, and
 publishes the result to [MaizeKit/maizekit.github.io](https://github.com/MaizeKit/maizekit.github.io),
 which serves https://maizekit.github.io/.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems privately, see [SECURITY.md](SECURITY.md).
 
 ## License
 

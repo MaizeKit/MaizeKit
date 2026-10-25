@@ -192,7 +192,7 @@ def build():
     release = f"Current release: **MaizeKit {version}**. " if version else ""
     article("index", "MaizeKit", abstract, f"""{overview}
 
-{release}Works in Safari on iPhone and Chrome on Android.
+{release}Tested in Safari on iPhone. It should run in any phone browser with location and WebGL, but others haven't been tested yet.
 
 - [Getting started](getting-started/): make a site for your maze.
 - [Configuration](configuration/): every field in `maze.config.json`.

@@ -1,0 +1,23 @@
+name: Something's wrong
+description: The map, your position or the route doesn't look right.
+labels: [bug]
+body:
+  - type: input
+    id: maze
+    attributes:
+      label: Which maze?
+      description: The link, e.g. https://maizekit.github.io/m/moore-family-farm/
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected and what you saw. A screenshot helps a lot.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Phone and browser
+      description: e.g. iPhone 15, Safari
