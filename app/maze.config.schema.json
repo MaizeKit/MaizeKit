@@ -167,14 +167,15 @@
         ]
       ]
     },
-    "paths": {
-      "type": "object",
-      "description": "Optional. How to tell paths from corn when the map isn't drawn like a typical sign: a pixel is a path if its saturation is at most maxSaturation and its brightness at least minValue (0\u2013255, OpenCV HSV).",
+    "detector": {
+      "type": "string",
+      "enum": [
+        "classic",
+        "learned"
+      ],
+      "description": "Optional. How paths are found. \"classic\" (default) suits painted maze signs. \"learned\" suits aerial photos: it learns the corn colour from the photo and treats anything clearly different as path.",
       "examples": [
-        {
-          "maxSaturation": 130,
-          "minValue": 110
-        }
+        "learned"
       ]
     }
   }

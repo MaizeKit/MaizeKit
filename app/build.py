@@ -36,6 +36,8 @@ GROUND = [(tuple(g["sign"]), (g["lat"], g["lon"])) for g in cfg["ground"]]
 
 RES = 0.15  # metres per output pixel
 CELL = 2  # output pixels per routing cell (0.3 m)
+MIN_CONNECTED = 0.9  # share of path that must connect to the exit
+MIN_PATH_M = 1.2  # narrower than this isn't a walkable path (e.g. a planter gap between corn rows)
 MARGIN_M = 12
 
 # ---------- straighten the sign ----------
@@ -44,22 +46,59 @@ photo = cv2.imread(cfg["photo"])
 M = cv2.getPerspectiveTransform(BOARD, np.float32([(0, 0), (W, 0), (W, H), (0, H)]))
 sign = cv2.warpPerspective(photo, M, (W, H), flags=cv2.INTER_CUBIC)
 
-blur = cv2.medianBlur(sign, 7)
-hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
-# Corn is dark, saturated green. A config can override this for maps drawn in other colours.
-pc = cfg.get("paths")
-if pc:
-    green = ~((hsv[..., 1] <= pc["maxSaturation"]) & (hsv[..., 2] >= pc["minValue"]))
-else:
-    green = (hsv[..., 2] < 100) & (hsv[..., 1] > 60)
-
 field = np.zeros((H, W), np.uint8)
 cv2.fillPoly(field, [FIELD], 1)
 for h in cfg.get("hide", []):  # e.g. a logo printed over the field
     cv2.circle(field, tuple(h["circle"][:2]), h["circle"][2], 0, -1)
 
+def otsu3_low_cutoff(values):
+    """Splits colour distances into three groups (corn, light paths, dark paths) the way
+    Otsu's method does for two, and returns the upper edge of the group nearest the corn."""
+    hist = np.bincount(values, minlength=256).astype(np.float64)
+    p = hist / hist.sum()
+    w = np.cumsum(p)
+    mu = np.cumsum(p * np.arange(256))
+    total = mu[-1]
+    best, cut = -1.0, 0
+    for t1 in range(1, 254):
+        w0, m0 = w[t1], mu[t1]
+        if w0 <= 0:
+            continue
+        for t2 in range(t1 + 1, 255):
+            w1, m1 = w[t2] - w0, mu[t2] - m0
+            w2, m2 = 1 - w[t2], total - mu[t2]
+            if w1 <= 0 or w2 <= 0:
+                continue
+            between = m0 * m0 / w0 + m1 * m1 / w1 + m2 * m2 / w2
+            if between > best:
+                best, cut = between, t1
+    return cut
+
+
+# Find the paths by learning what corn looks like in this photo: most of a maze is corn,
+# so the typical colour inside the field is the corn colour. Anything clearly different
+# from it (darker, lighter, browner) is path. Works for painted signs and aerial photos.
+blur = cv2.medianBlur(sign, 7)
+colour = cv2.cvtColor(blur, cv2.COLOR_BGR2LAB).astype(np.float32)
+inside = field > 0
+corn_colour = np.median(colour[inside], axis=0)
+diff = np.linalg.norm(colour - corn_colour, axis=2)
+d8 = np.clip(diff * 2, 0, 255).astype(np.uint8)
+if cfg.get("detector") == "learned":
+    green = d8 <= otsu3_low_cutoff(d8[inside])
+else:
+    # Classic rule for painted signs: corn is dark, saturated green.
+    green = (cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)[..., 2] < 100) & (cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)[..., 1] > 60)
+
 walk = ((field > 0) & ~green).astype(np.uint8)
-walk = cv2.morphologyEx(walk, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+# Drop anything too narrow to walk. The map's scale comes from the field's real size.
+def _metres(a, b):
+    (la1, lo1), (la2, lo2) = a, b
+    return math.hypot((la1 - la2) * 110540, (lo1 - lo2) * 111320 * math.cos(math.radians(la1)))
+sign_px = np.mean([math.dist(GROUND[i][0], GROUND[i - 1][0]) for i in range(4)])
+ground_m = np.mean([_metres(GROUND[i][1], GROUND[i - 1][1]) for i in range(4)])
+k = max(3, int(round(MIN_PATH_M / (ground_m / sign_px))) | 1) if cfg.get("detector") == "learned" else 3
+walk = cv2.morphologyEx(walk, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)) if k > 3 else np.ones((3, 3), np.uint8))
 n, lbl, st, _ = cv2.connectedComponentsWithStats(walk, 8)
 for i in range(1, n):
     if st[i, cv2.CC_STAT_AREA] < 1000:  # specks, e.g. texture inside lettering
@@ -117,6 +156,13 @@ def cell_label(p):
     vals = win[win > 0]
     return np.bincount(vals).argmax() if len(vals) else 0
 assert cell_label(POINTS["entrance"]) == cell_label(POINTS["exit"]) != 0, "entrance and exit not connected"
+
+# How much of the maze is one connected network. A low score means the paths weren't read
+# cleanly (shadows, glare, a logo) and some routes would be missing, so stop the build.
+exit_label = cell_label(POINTS["exit"])
+connected = float((lab == exit_label).sum()) / max(1, int((lab > 0).sum()))
+print(f"paths: {connected:.0%} of the maze connects to the exit")
+assert connected >= MIN_CONNECTED, f"only {connected:.0%} of the paths connect to the exit; the map wasn't read cleanly"
 
 field_out = to_out(FIELD).round(1).tolist()
 points_out = {k: dict(zip(("x", "y"), to_out([p])[0].round(1).tolist())) for k, p in POINTS.items()}

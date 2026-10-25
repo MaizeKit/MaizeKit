@@ -8,6 +8,12 @@ const OUTSIDE_MARGIN_M = 20;
 const MAX_GPS_ACCURACY_M = 50;
 /** Within this distance of the exit (metres), the app says you're at the exit. */
 const ARRIVED_M = 8;
+/** Walking speed (metres per second) of the simulated visitor in demo mode. */
+const DEMO_WALK_MPS = 1.2;
+
+/** How far simulated GPS fixes wander from the true spot in demo mode (metres, one standard deviation). */
+const DEMO_GPS_NOISE_M = 3;
+
 /** Browser storage key for the user's Fix my spot correction. */
 const STORE_KEY = 'maze-offset-v2';
 
@@ -730,6 +736,38 @@ function snapRaw(u, v) {
   return cy * gw + cx;
 }
 
+// ---------- demo ----------
+
+/**
+ * Demo mode: add ?demo to a maze's link and a simulated visitor walks out from the middle
+ * of the maze, sending GPS fixes with realistic wobble through the same code as real GPS.
+ * ?demo=8 walks 8x faster. Used to try a maze from home and to record videos.
+ * @param {number} speedup How many times faster than walking pace.
+ */
+function startDemo(speedup) {
+  const field = state.meta.field;
+  const c = field.reduce((a, [x, y]) => [a[0] + x / field.length, a[1] + y / field.length], [0, 0]);
+  const start = snap(c[0], c[1]);
+  if (start < 0) return;
+  const walk = buildRoute(start);
+  const total = walk.cum[walk.cum.length - 1];
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const noise = () => Math.sqrt(-2 * Math.log(rand())) * Math.cos(2 * Math.PI * rand()) * DEMO_GPS_NOISE_M;
+  const t0 = performance.now();
+  const tick = () => {
+    const along = Math.min(total, ((performance.now() - t0) / 1000) * DEMO_WALK_MPS * speedup);
+    let i = walk.cum.findIndex((d) => d >= along);
+    if (i < 0) i = walk.pts.length - 1;
+    const g = imgToGround(walk.pts[i].u, walk.pts[i].v);
+    const [lon, lat] = toLonLat(g.e + noise(), g.n + noise());
+    onGps({ coords: { latitude: lat, longitude: lon, accuracy: 6, heading: null, speed: 0 } });
+    if (along < total) setTimeout(tick, 500);
+    else setTimeout(() => { state.route = null; startDemo(speedup); }, 4000); // pause at the exit, then walk again
+  };
+  tick();
+}
+
 /**
  * Starts the app: loads the maze data and path grid, works out distances from the exit,
  * draws the map and starts GPS.
@@ -752,7 +790,14 @@ async function boot() {
   drawMarks();
   fitMaze(false);
   setHud('', 'Finding your location…');
-  startGps();
+  const demo = new URLSearchParams(location.search).get('demo');
+  if (demo !== null) {
+    $('notice').textContent = 'Demo: a simulated walk out of the maze.';
+    $('notice').hidden = false;
+    startDemo(Math.max(1, Number(demo) || 6));
+  } else {
+    startGps();
+  }
   refresh();
 }
 
