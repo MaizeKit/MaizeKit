@@ -46,3 +46,5 @@ ul, ol { padding-left: 1.3em; margin: 0 0 12px; }
 
 footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 15px; color: var(--muted); }
 footer p { margin: 4px 0; }
+
+.note { font-size: 15px; color: var(--muted); }
