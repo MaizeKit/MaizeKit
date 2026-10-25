@@ -72,6 +72,27 @@ const live = '/m/moore-family-farm/';
       </ol>
     </section>
 
+    <section class="science">
+      <p class="eyebrow">Under the hood</p>
+      <h2>It learns what corn<br>looks like.</h2>
+      <p class="sub">Every map is different: painted signs, drone shots, sun and shadow. So MaizeKit reads each one on its own terms.</p>
+      <div class="sci">
+        <figure class="sci-fig">
+          <img src="/brand/paths-moore.png" alt="Moore Family Farm's maze as MaizeKit sees it: every path in gold, brighter toward the middle of each path" width="1240" height="980" loading="lazy">
+          <figcaption>Moore Family Farm, as the router sees it. Brighter is further from the corn.</figcaption>
+        </figure>
+        <ol class="sci-steps">
+          <li><b>Learn the corn.</b> Most of a maze is corn, so the typical colour inside the field <em>is</em> the corn colour.</li>
+          <li><b>Measure the difference.</b> Every pixel gets a distance from that colour. Paths stand out, lighter or darker.</li>
+          <li><b>Split three ways.</b> Corn, light paths, dark paths: a three-class version of Otsu's method finds the cut-offs.</li>
+          <li><b>Ignore the gaps.</b> Anything narrower than 1.2&nbsp;m, the space between corn rows, isn't a path.</li>
+          <li><b>Prove it connects.</b> The build refuses to publish unless 90% of the paths reach the exit.</li>
+          <li><b>Route down the middle.</b> Walking distance from the exit is worked out once, favouring the centre of each path, so the way out is instant from anywhere.</li>
+        </ol>
+      </div>
+      <p class="sci-note">Steps 1–4 are for aerial photos. Painted signs like Moore's use a simpler colour rule. <a href="/docs/reference/">See the code</a></p>
+    </section>
+
     <section class="features">
       <h2>Everything you need.<br><span>Nothing you don't.</span></h2>
       <div class="grid">
@@ -212,6 +233,16 @@ const live = '/m/moore-family-farm/';
   .steps h3 { margin: 0 0 6px; font-size: 24px; letter-spacing: -0.02em; }
   .steps p { margin: 0; color: #a1a1a6; font-size: 17px; line-height: 1.4; }
 
+  .science { background: var(--bg); }
+  .sci { max-width: 980px; margin: 56px auto 0; display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; text-align: left; }
+  .sci-fig { margin: 0; background: #0b0b0c; border: 1px solid var(--line); border-radius: 28px; padding: 28px; }
+  .sci-fig figcaption { margin-top: 16px; font-size: 14px; color: var(--muted); text-align: center; }
+  .sci-steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; gap: 18px; }
+  .sci-steps li { counter-increment: s; position: relative; padding-left: 44px; font-size: 17px; line-height: 1.45; color: var(--muted); }
+  .sci-steps li::before { content: counter(s); position: absolute; left: 0; top: 1px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--tile); color: var(--gold); font-weight: 700; font-size: 14px; }
+  .sci-steps b { color: var(--text); }
+  .sci-steps em { color: var(--text); font-style: normal; }
+  .sci-note { margin: 36px auto 0; font-size: 14px; color: var(--muted); }
   .features { background: var(--soft); }
   .features h2 span { color: var(--muted); }
   .grid { max-width: 980px; margin: 56px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: left; }
@@ -242,6 +273,7 @@ const live = '/m/moore-family-farm/';
     .tile.wide, .tile.full { grid-column: auto; }
     .tile { min-height: 0; padding: 28px 24px; }
     .steps { grid-template-columns: 1fr; max-width: 420px; gap: 44px; }
+    .sci { grid-template-columns: 1fr; gap: 36px; }
     .nav-links { gap: 16px; }
   }
 </style>
