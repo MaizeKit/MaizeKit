@@ -54,6 +54,18 @@ jobs:
           mkdir -p _site/moore-family-farm
           printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/m/moore-family-farm/"><a href="/m/moore-family-farm/">Moore Family Farm Corn Maze</a>\n' > _site/moore-family-farm/index.html
 
+      - name: Sitemap and robots.txt
+        # The docs make their own sitemap; this one lists the website and every maze.
+        run: |
+          {
+            echo '<?xml version="1.0" encoding="UTF-8"?>'
+            echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            echo '  <url><loc>https://maizekit.github.io/</loc></url>'
+            for farm in m/*/; do echo "  <url><loc>https://maizekit.github.io/$farm</loc></url>"; done
+            echo '</urlset>'
+          } > _site/sitemap.xml
+          printf 'User-agent: *\nAllow: /\n\nSitemap: https://maizekit.github.io/sitemap.xml\nSitemap: https://maizekit.github.io/docs/sitemap-index.xml\n' > _site/robots.txt
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
