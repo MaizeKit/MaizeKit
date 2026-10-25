@@ -42,12 +42,15 @@ jobs:
       - name: Build docs with DocC
         run: |
           docker run --rm -v "$PWD:/w" -w /w swift:6.0 \
-            docc convert MaizeKit.docc \
+            docc convert MaizeKit.docc --additional-symbol-graph-dir symbol-graphs \
               --fallback-display-name MaizeKit \
               --fallback-bundle-identifier io.github.maizekit \
               --transform-for-static-hosting --hosting-base-path docs \
               --output-path _site/docs
-          sudo cp docs-redirect.html _site/docs/index.html
+          sudo chown -R "$USER" _site
+          cp tools/docs-tweaks.css _site/docs/css/maizekit.css
+          find _site/docs -name index.html -exec sed -i 's#</head>#<link href="/docs/css/maizekit.css" rel="stylesheet"></head>#' {} +
+          cp docs-redirect.html _site/docs/index.html
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

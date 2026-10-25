@@ -193,10 +193,11 @@ def build():
 
     available = f'  @Available("MaizeKit", introduced: "{version}")\n' if version else ""
     overview = readme_section(readme, "Overview").strip()
-    (OUT / "MaizeKit.md").write_text(f"""# MaizeKit
+    # Titled ``MaizeKit`` so it attaches to the module in symbol-graphs/, which makes DocC
+    # render it as a Framework page, the same as Apple's kits.
+    (OUT / "MaizeKit.md").write_text(f"""# ``MaizeKit``
 
 @Metadata {{
-  @TechnologyRoot
   @PageImage(purpose: icon, source: "maizekit-icon", alt: "MaizeKit icon")
 {available}}}
 

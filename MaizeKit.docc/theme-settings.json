@@ -1,9 +1,10 @@
 {
   "theme": {
     "color": {
-      "standard-orange": "#e07b0a",
-      "documentation-intro-fill": "radial-gradient(circle at top, #f8a51e 0%, #e07b0a 100%)",
-      "documentation-intro-accent": "#ffd24a"
+      "documentation-intro-fill": "radial-gradient(circle at 80% 20%, #1c3a66 0%, #0b1a33 70%)",
+      "documentation-intro-figure": "#ffffff",
+      "documentation-intro-title": "#ffffff",
+      "documentation-intro-eyebrow": "#b8c4d6"
     }
   }
 }
