@@ -94,3 +94,18 @@ html, body {
   text-decoration: none;
 }
 .built img { width: 18px; height: 18px; }
+
+.notice {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 92px);
+  left: 12px;
+  right: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(255, 244, 214, 0.95);
+  color: #5c4300;
+  font-size: 13px;
+  z-index: 5;
+}

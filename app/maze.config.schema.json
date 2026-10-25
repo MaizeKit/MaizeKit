@@ -28,6 +28,13 @@
         2026
       ]
     },
+    "notice": {
+      "type": "string",
+      "description": "Optional. A short line shown to visitors under the status card, e.g. that the entrance and exit haven't been confirmed by the farm.",
+      "examples": [
+        "Preview: entrance and exit not confirmed by the farm."
+      ]
+    },
     "photo": {
       "type": "string",
       "description": "Path to a straight-on photo of the maze map.",
@@ -158,6 +165,16 @@
             "lon": -76.502556
           }
         ]
+      ]
+    },
+    "paths": {
+      "type": "object",
+      "description": "Optional. How to tell paths from corn when the map isn't drawn like a typical sign: a pixel is a path if its saturation is at most maxSaturation and its brightness at least minValue (0\u2013255, OpenCV HSV).",
+      "examples": [
+        {
+          "maxSaturation": 130,
+          "minValue": 110
+        }
       ]
     }
   }

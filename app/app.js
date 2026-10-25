@@ -738,6 +738,10 @@ function snapRaw(u, v) {
 async function boot() {
   state.meta = await (await fetch('assets/maze.json', { cache: 'no-cache' })).json();
   if (state.meta.name) document.title = state.meta.name;
+  if (state.meta.notice) {
+    $('notice').textContent = state.meta.notice;
+    $('notice').hidden = false;
+  }
   loadOffset();
   await loadGrid();
   const exit = state.meta.points.exit;

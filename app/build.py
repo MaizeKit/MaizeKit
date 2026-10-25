@@ -46,7 +46,12 @@ sign = cv2.warpPerspective(photo, M, (W, H), flags=cv2.INTER_CUBIC)
 
 blur = cv2.medianBlur(sign, 7)
 hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
-green = (hsv[..., 2] < 100) & (hsv[..., 1] > 60)
+# Corn is dark, saturated green. A config can override this for maps drawn in other colours.
+pc = cfg.get("paths")
+if pc:
+    green = ~((hsv[..., 1] <= pc["maxSaturation"]) & (hsv[..., 2] >= pc["minValue"]))
+else:
+    green = (hsv[..., 2] < 100) & (hsv[..., 1] > 60)
 
 field = np.zeros((H, W), np.uint8)
 cv2.fillPoly(field, [FIELD], 1)
@@ -117,6 +122,7 @@ field_out = to_out(FIELD).round(1).tolist()
 points_out = {k: dict(zip(("x", "y"), to_out([p])[0].round(1).tolist())) for k, p in POINTS.items()}
 meta = {
     "name": cfg["name"],
+    "notice": cfg.get("notice", ""),
     "width": OW, "height": OH, "res": RES, "cell": CELL,
     "gridWidth": OW // CELL, "gridHeight": OH // CELL, "distScale": DIST_SCALE,
     # top-left corner of the raster and metres-per-degree used to build it
