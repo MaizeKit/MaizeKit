@@ -39,8 +39,8 @@ m/your-farm/
 └── maze.config.json    where the map sits, on the photo and on the ground
 ```
 
-Open a pull request with it. The build checks the config and that the exit can be reached,
-and once merged the maze is live at `maizekit.github.io/m/your-farm/`. Each season, swap in
+Open a pull request with it. The build checks the config, and if the paths don't fully
+connect to the exit the maze page shows visitors a notice. Once merged the maze is live at `maizekit.github.io/m/your-farm/`. Each season, swap in
 the new photo and config; the link stays the same. See [Configuration](https://maizekit.github.io/docs/configuration/).
 
 ## Entrance sign

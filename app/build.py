@@ -36,7 +36,7 @@ GROUND = [(tuple(g["sign"]), (g["lat"], g["lon"])) for g in cfg["ground"]]
 
 RES = 0.15  # metres per output pixel
 CELL = 2  # output pixels per routing cell (0.3 m)
-MIN_CONNECTED = 0.9  # share of path that must connect to the exit
+MIN_CONNECTED = 0.9  # below this share of path connected to the exit, visitors see a notice
 MIN_PATH_M = 1.2  # narrower than this isn't a walkable path (e.g. a planter gap between corn rows)
 MARGIN_M = 12
 
@@ -155,20 +155,26 @@ def cell_label(p):
     win = lab[y - 4:y + 5, x - 4:x + 5]
     vals = win[win > 0]
     return np.bincount(vals).argmax() if len(vals) else 0
-assert cell_label(POINTS["entrance"]) == cell_label(POINTS["exit"]) != 0, "entrance and exit not connected"
+# Path checks warn rather than fail: the maze still publishes, and visitors see a notice.
+warnings = []
+if not (cell_label(POINTS["entrance"]) == cell_label(POINTS["exit"]) != 0):
+    warnings.append("The entrance and exit may not be connected on this map.")
 
 # How much of the maze is one connected network. A low score means the paths weren't read
 # cleanly (shadows, glare, a logo) and some routes would be missing, so stop the build.
 exit_label = cell_label(POINTS["exit"])
 connected = float((lab == exit_label).sum()) / max(1, int((lab > 0).sum()))
 print(f"paths: {connected:.0%} of the maze connects to the exit")
-assert connected >= MIN_CONNECTED, f"only {connected:.0%} of the paths connect to the exit; the map wasn't read cleanly"
+if connected < MIN_CONNECTED:
+    warnings.append(f"Only {connected:.0%} of this maze's paths could be traced to the exit, so some routes may be missing.")
+for w in warnings:
+    print("warning:", w)
 
 field_out = to_out(FIELD).round(1).tolist()
 points_out = {k: dict(zip(("x", "y"), to_out([p])[0].round(1).tolist())) for k, p in POINTS.items()}
 meta = {
     "name": cfg["name"],
-    "notice": cfg.get("notice", ""),
+    "notice": " ".join([cfg.get("notice", "")] + warnings).strip(),
     "width": OW, "height": OH, "res": RES, "cell": CELL,
     "gridWidth": OW // CELL, "gridHeight": OH // CELL, "distScale": DIST_SCALE,
     # top-left corner of the raster and metres-per-degree used to build it

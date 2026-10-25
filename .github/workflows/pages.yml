@@ -45,7 +45,7 @@ jobs:
 
       - name: Mazes
         # Each m/<farm>/ becomes _site/m/<farm>/: the shared app plus that farm's map.
-        # build.py stops with an error if the config is incomplete or the exit can't be reached.
+        # build.py stops if the config is incomplete; path problems become a notice on the maze page.
         run: |
           pip install opencv-python-headless numpy
           for farm in m/*/; do

@@ -8,7 +8,7 @@ If you run a maze, the easiest way is to [open an "Add my maze" request](https:/
 
 To do it yourself, add `m/<farm>/sign-photo.png` and `m/<farm>/maze.config.json`
 ([configuration reference](https://maizekit.github.io/docs/configuration/)) and open a pull request.
-The build checks that the config is complete and that the exit can be reached.
+The build stops if the config is incomplete. If the paths don't fully connect to the exit, it still publishes and the maze page shows visitors a notice.
 
 ## Changing the app or docs
 
