@@ -179,7 +179,7 @@ def build():
 
     tag = git("describe", "--tags", "--abbrev=0")
     version = tag.lstrip("v").removesuffix(".0") if tag else ""
-    abstract = re.search(r"^\*\*(.+?)\*\*$", readme, re.M).group(1)
+    abstract = re.search(r"^# MaizeKit\n+(.+)$", readme, re.M).group(1).strip()  # tagline under the title
     sections, settings = parse_app(app)
     errors = parse_errors(app)
     source = lambda path: f"{REPO}/blob/main/{path}"

@@ -1,68 +1,65 @@
 <div align="center">
 
-<img src="brand/maizekit-icon-256.png" width="112" height="112" alt="MaizeKit icon">
+<img src="brand/maizekit-icon-256.png" width="96" height="96" alt="">
 
 # MaizeKit
 
-**Turn a photo of a corn maze map into a phone app that shows where you are and the way out.**
+Turn a photo of a corn maze map into a phone app that shows where you are and the way out.
 
-[![Built with MaizeKit](brand/badge/built-with-maizekit.svg)](https://maizekit.github.io/)
+[**Try a live maze**](https://maizekit.github.io/m/moore-family-farm/) · [Website](https://maizekit.github.io/) · [Documentation](https://maizekit.github.io/docs/)
 
-[Website](https://maizekit.github.io/) · [Documentation](https://maizekit.github.io/docs/) · [Try a live maze](https://maizekit.github.io/m/moore-family-farm/)
+<img src="brand/sign-photo.jpg" height="360" alt="A maze map on a sign at a corn maze entrance">&nbsp;&nbsp;<img src="brand/app-screenshot.jpg" height="360" alt="The same maze in MaizeKit, with a blue dot and a route to the exit">
+
+<sub>The map at the entrance, and the same maze in MaizeKit.</sub>
 
 </div>
 
 ## Overview
 
-MaizeKit makes a small web app (a PWA) for each corn maze. Visitors open it on their
-phone, allow location, and see a blue dot on the maze map with a line to the exit
-from wherever they're standing.
+Visitors scan a QR code at the entrance, allow location, and get:
 
-It's static files on GitHub Pages: no server, no accounts, nothing to install for
-visitors. Location is used on the phone and never sent anywhere.
+- a blue dot showing where they are in the maze
+- a line to the exit from wherever they're standing
+- **Fix my spot**, for when GPS puts them a row off
+
+Everything runs as static files on GitHub Pages. There's no server and no accounts, and
+location never leaves the phone.
 
 ## Getting started
 
-**Run a corn maze?** [Open an "Add my maze" request](https://github.com/MaizeKit/MaizeKit/issues/new?template=add-maze.yml)
-with a photo of your maze map (the sign at the entrance, or an aerial photo) and your farm's
-address. We'll set it up and send you the link. It's free.
+**Run a corn maze?** [Send us your map](https://github.com/MaizeKit/MaizeKit/issues/new?template=add-maze.yml):
+a photo of the sign at the entrance or an aerial shot, plus your address. We'll set it up
+and send you the link. It's free.
 
-**Adding one yourself?** Each maze is one folder, `m/<farm>/`, with a photo of the maze
-map and a `maze.config.json` describing it.
+**Adding one yourself?** Each maze is a folder with two files:
 
-1. Add a straight-on photo of the maze map as `m/<farm>/sign-photo.png`.
-2. Describe it in `maze.config.json` next to it ([see Configuration](https://maizekit.github.io/docs/configuration/)).
-3. Open a pull request. The build checks that the config is complete and that the exit can be reached from the entrance.
-4. Once merged, it's live at `https://maizekit.github.io/m/<farm>/`.
+```
+m/your-farm/
+├── sign-photo.png      a straight-on photo of the maze map
+└── maze.config.json    where the map sits, on the photo and on the ground
+```
 
-Each season, replace the photo and config. The farm's link and printed sign stay the
-same, and git keeps every past year.
+Open a pull request with it. The build checks the config and that the exit can be reached,
+and once merged the maze is live at `maizekit.github.io/m/your-farm/`. Each season, swap in
+the new photo and config; the link stays the same. See [Configuration](https://maizekit.github.io/docs/configuration/).
 
 ## Entrance sign
 
-Every maze gets a printable sign with a QR code for its address at
-`/m/<farm>/sign.html`.
+Every maze gets a printable sign with a QR code at `/m/your-farm/sign.html`.
 
 ## Repository
 
-| Path | What it is |
-|---|---|
-| `index.html`, `style.css` | The website. |
-| `app/` | The maze app, shared by every maze, and `build.py`, which turns a photo and config into the map. |
-| `m/` | One folder per farm: its map photo and `maze.config.json`. |
-| `docs/` | Documentation ([Starlight](https://starlight.astro.build/)). `docs/build.py` writes its pages from the code. |
-| `brand/` | Icon, favicon, wordmark, badge and website images. |
+```
+app/       the maze app every maze shares, and build.py, which turns a photo into a map
+m/         one folder per maze
+docs/      the documentation site, written from the code by docs/build.py
+brand/     icon, badge and images
+index.html the website
+```
 
-`.github/workflows/pages.yml` builds every maze and the docs on every push to `main`, and
-publishes the result to [MaizeKit/maizekit.github.io](https://github.com/MaizeKit/maizekit.github.io),
-which serves https://maizekit.github.io/.
+Every push to `main` builds all mazes and the docs and publishes them to
+[maizekit.github.io](https://maizekit.github.io/).
 
-## Contributing
+---
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems privately, see [SECURITY.md](SECURITY.md).
-
-## License
-
-MaizeKit is [MIT licensed](LICENSE). The bundled [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js)
-(BSD-3-Clause) and [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT) keep their own
-licenses. Maze photos in `m/` belong to their farms.
+<sub>MIT licensed. Bundles [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js) (BSD-3-Clause) and [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT). Maze photos in `m/` belong to their farms, which aren't affiliated with MaizeKit.</sub>
