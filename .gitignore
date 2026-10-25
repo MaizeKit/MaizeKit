@@ -2,5 +2,5 @@
 _site/
 docs/node_modules/
 docs/.astro/
-docs/src/content/docs/*.md
+docs/src/content/docs/docs/*.md
 __pycache__/

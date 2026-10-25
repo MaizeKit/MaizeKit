@@ -25,10 +25,19 @@ jobs:
         with:
           fetch-depth: 0 # tags, for the release shown in the docs
 
-      - name: Website
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Website and docs (Starlight)
         run: |
-          mkdir -p _site
-          cp -R index.html style.css brand _site/
+          python3 docs/build.py
+          cd docs && npm ci && npm run build
+
+      - name: Brand files
+        run: cp -R brand _site/
 
       - uses: actions/setup-python@v5
         with:
@@ -55,27 +64,15 @@ jobs:
           printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/m/moore-family-farm/"><a href="/m/moore-family-farm/">Moore Family Farm Corn Maze</a>\n' > _site/moore-family-farm/index.html
 
       - name: Sitemap and robots.txt
-        # The docs make their own sitemap; this one lists the website and every maze.
+        # Starlight writes sitemap-index.xml for its pages; this one lists every maze.
         run: |
           {
             echo '<?xml version="1.0" encoding="UTF-8"?>'
             echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-            echo '  <url><loc>https://maizekit.github.io/</loc></url>'
             for farm in m/*/; do echo "  <url><loc>https://maizekit.github.io/$farm</loc></url>"; done
             echo '</urlset>'
-          } > _site/sitemap.xml
-          printf 'User-agent: *\nAllow: /\n\nSitemap: https://maizekit.github.io/sitemap.xml\nSitemap: https://maizekit.github.io/docs/sitemap-index.xml\n' > _site/robots.txt
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-
-      - name: Docs
-        run: |
-          python3 docs/build.py
-          cd docs && npm ci && npm run build
+          } > _site/sitemap-mazes.xml
+          printf 'User-agent: *\nAllow: /\n\nSitemap: https://maizekit.github.io/sitemap-mazes.xml\nSitemap: https://maizekit.github.io/sitemap-index.xml\n' > _site/robots.txt
 
       - name: Publish to MaizeKit/maizekit.github.io
         if: github.ref == 'refs/heads/main'

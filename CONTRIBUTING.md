@@ -16,16 +16,17 @@ The build checks that the config is complete and that the exit can be reached.
 - Document new functions and settings with a `/** */` comment in `app/app.js`; the docs'
   Reference and Settings pages are generated from those comments.
 - The docs are written from the code by `docs/build.py`. Don't edit the generated pages in
-  `docs/src/content/docs/`; change the README, the schema or the code instead.
+  `docs/src/content/docs/docs/`; change the README, the schema or the code instead.
 
 ## Running it locally
 
 ```sh
-# Build every maze into _site/m/ (needs Python 3 with opencv-python-headless and numpy)
-mkdir -p _site && for farm in m/*/; do mkdir -p "_site/$farm" && cp -R app/. "_site/$farm" && cp "$farm"* "_site/$farm" && (cd "_site/$farm" && python3 build.py); done
-
-# Docs (needs Node)
+# 1. Website and docs (needs Node). Starlight empties _site when it builds, so this goes first.
 python3 docs/build.py && (cd docs && npm install && npm run build)
+
+# 2. Every maze into _site/m/ (needs Python 3 with opencv-python-headless and numpy)
+for farm in m/*/; do mkdir -p "_site/$farm" && cp -R app/. "_site/$farm" && cp "$farm"* "_site/$farm" && (cd "_site/$farm" && python3 build.py); done
+cp -R brand _site/
 
 python3 -m http.server -d _site
 ```

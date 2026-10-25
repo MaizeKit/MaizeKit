@@ -1,4 +1,4 @@
-"""Writes the Starlight docs pages (docs/src/content/docs) from the code in this repo,
+"""Writes the Starlight docs pages (docs/src/content/docs/docs) from the code in this repo,
 so the docs always match it:
   README.md                     Overview, Getting started, Entrance sign
   app/maze.config.schema.json   Configuration
@@ -115,34 +115,32 @@ def parse_app(src):
             continue
         summary, params, returns = parse_doc(m.group(2))
         decl = m.group(3).rstrip(" {")
+        line = src.count("\n", 0, m.start(3)) + 1
         if decl.startswith("const "):
             name = re.match(r"const (\w+)", decl).group(1)
             value = decl.split("=", 1)[1].strip().rstrip(";")
-            settings.append({"name": name, "value": value, "summary": summary})
+            settings.append({"name": name, "value": value, "summary": summary, "line": line})
             continue
         name = re.match(r"(?:async )?(?:function|class) (\w+)", decl).group(1)
         if current is None:
             current = {"title": "General", "symbols": []}
             sections.append(current)
-        current["symbols"].append({"name": name, "decl": decl, "summary": summary, "params": params, "returns": returns})
+        current["symbols"].append({"name": name, "decl": decl, "summary": summary, "params": params, "returns": returns, "line": line})
     return [s for s in sections if s["symbols"]], settings
 
 
 def parse_errors(src):
-    """Every alert the app can show: setHud('alert', title, subtitle)."""
+    """Every alert the app can show: setHud('alert', title, subtitle), with its line."""
     errors, seen = [], set()
     for m in re.finditer(r"setHud\('alert', (['`])(.+?)\1(?:, (['`])(.+?)\3)?", src):
         title = m.group(2)
-        sub = m.group(4) or ""
-        sub = re.sub(r"\$\{[^}]+\}", "…", sub)
         if title in seen:
             continue
         seen.add(title)
-        errors.append((title, sub))
+        sub = re.sub(r"\$\{[^}]+\}", "…", m.group(4) or "")
+        errors.append((title, sub, src.count("\n", 0, m.start()) + 1))
     return errors
 
-
-# ---------- render ----------
 
 def anchor(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
@@ -151,7 +149,7 @@ def anchor(s):
 # ---------- Starlight pages ----------
 # Every page is generated from the kit, so the docs always match the code.
 
-OUT = ROOT / "docs/src/content/docs"
+OUT = ROOT / "docs/src/content/docs/docs"
 
 
 def article(slug, title, description, body):
@@ -187,50 +185,39 @@ def build():
     OUT.mkdir(parents=True, exist_ok=True)
     for f in OUT.glob("*.md"):
         f.unlink()
+    at = lambda path, line: f"{source(path)}#L{line}"
+    made_from = lambda *paths: "<small>Generated from " + ", ".join(f"[`{p}`]({source(p)})" for p in paths) + ".</small>\n\n"
 
-    overview = readme_section(readme, "Overview").strip()
-    release = f"Current release: **MaizeKit {version}**. " if version else ""
-    article("index", "MaizeKit", abstract, f"""{overview}
+    # 1. Getting started (the docs front page): for anyone adding a maze.
+    release = f"Current release: [MaizeKit {version}]({REPO}/releases/tag/{tag}). " if version else ""
+    article("index", "Getting started", abstract, made_from("README.md") +
+            readme_section(readme, "Getting started") + "\n## Entrance sign\n\n" + readme_section(readme, "Entrance sign") +
+            f"\n## Browsers\n\n{release}Tested in Safari on iPhone. It should run in any phone browser with "
+            "location and WebGL, but others haven't been tested yet.\n")
 
-{release}Tested in Safari on iPhone. It should run in any phone browser with location and WebGL, but others haven't been tested yet.
-
-- [Getting started](getting-started/): make a site for your maze.
-- [Configuration](configuration/): every field in `maze.config.json`.
-- [Errors](errors/): the messages visitors can see.
-- [Settings](settings/): values in `app.js` you can tune.
-- [Reference](reference/): every function in `app.js`.
-- [Build tool](build-tool/): how a photo becomes a map.
-""")
-
-    article("getting-started", "Getting started", "Make a site for your maze in six steps.",
-            readme_section(readme, "Getting started") + "\n## Entrance sign\n\n" + readme_section(readme, "Entrance sign"))
-
+    # 2. Configuration: every field of maze.config.json.
     rows = [(f"`{k}`", "Required" if k in schema.get("required", []) else "Optional", p.get("description", ""))
             for k, p in schema["properties"].items()]
     article("configuration", "Configuration", "Every field in maze.config.json.",
-            schema.get("description", "") + "\n\n" + md_table(["Field", "", "What it is"], rows) +
-            f"\n\nStart from [an example config]({source('m/moore-family-farm/maze.config.json')}). "
-            f"The format is defined in [`maze.config.schema.json`]({source('app/maze.config.schema.json')}).")
+            made_from("app/maze.config.schema.json") + schema.get("description", "") + "\n\n" +
+            md_table(["Field", "", "What it is"], rows) +
+            f"\n\nA working example: [Moore Family Farm's config]({source('m/moore-family-farm/maze.config.json')}).")
 
-    article("errors", "Errors", "The messages visitors can see, and what they mean.",
-            md_table(["Message", "What it tells the visitor"], [(f"**{t}**", s) for t, s in errors]))
-
-    article("settings", "Settings", "Values in app.js you can tune.",
-            md_table(["Name", "Default", "What it does"], [(f"`{s['name']}`", f"`{s['value']}`", s["summary"]) for s in settings]))
-
-    ref = [f"From the doc comments in [`app.js`]({source('app/app.js')}), in file order."]
+    # 3. Reference: for contributors. Every entry links to its line in the code.
+    ref = [made_from("app/app.js", "app/build.py")]
+    ref.append("## Settings\n\nConstants in `app.js`.\n\n" + md_table(
+        ["Name", "Default", "What it does"],
+        [(f"[`{s['name']}`]({at('app/app.js', s['line'])})", f"`{s['value']}`", s["summary"]) for s in settings]))
+    ref.append("\n## Error messages\n\nWhat visitors see in red when something needs their attention.\n\n" + md_table(
+        ["Message", "What it tells the visitor"],
+        [(f"[**{t}**]({at('app/app.js', ln)})", sub) for t, sub, ln in errors]))
+    ref.append("\n## Functions\n")
     for sec in sections:
-        ref.append(f"\n## {sec['title']}\n")
+        ref.append(f"\n### {sec['title']}\n")
         for sym in sec["symbols"]:
-            ref.append(f"### `{sym['name']}`\n\n{sym['summary']}\n\n```js\n{sym['decl']}\n```\n")
-            if sym["params"]:
-                ref.append("\n".join(f"- term `{n}`: {d} ({t})".replace("- term ", "- ") for t, n, d in sym["params"]) + "\n")
-            if sym["returns"]:
-                ref.append(f"Returns `{sym['returns'][0]}`. {sym['returns'][1]}\n")
-    article("reference", "Reference", "Every function in app.js, for contributors.", "\n".join(ref))
-
-    article("build-tool", "Build tool", "How tools/build_assets.py turns a photo into a map.",
-            f"```\n{build_doc}\n```\n\n[View the source]({source('app/build.py')})")
+            ref.append(f"- [`{sym['name']}`]({at('app/app.js', sym['line'])}): {sym['summary']}")
+    ref.append(f"\n## Build tool\n\n[`app/build.py`]({source('app/build.py')}) turns a map photo and config into the map overlay and path grid.\n\n```\n{build_doc}\n```")
+    article("reference", "Reference", "Settings, error messages and every function, for contributors.", "\n".join(ref))
 
     print(f"wrote {len(list(OUT.glob('*.md')))} pages to {OUT}/")
 

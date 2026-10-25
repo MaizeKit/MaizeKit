@@ -52,9 +52,8 @@ Every maze gets a printable sign with a QR code at `/m/your-farm/sign.html`.
 ```
 app/       the maze app every maze shares, and build.py, which turns a photo into a map
 m/         one folder per maze
-docs/      the documentation site, written from the code by docs/build.py
+docs/      the website and documentation (Starlight); docs/build.py writes the docs pages from the code
 brand/     icon, badge and images
-index.html the website
 ```
 
 Every push to `main` builds all mazes and the docs and publishes them to
