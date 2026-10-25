@@ -394,7 +394,21 @@ function drawMarks() {
 function fitMaze(animate = true) {
   const b = new maplibregl.LngLatBounds();
   imageCorners().forEach((c) => b.extend(c));
-  map.fitBounds(b, { padding: { top: 100, bottom: 90, left: 16, right: 16 }, bearing: state.mode === 'north' ? 0 : map.getBearing(), duration: animate ? 600 : 0 });
+  const bearing = state.mode === 'track' ? map.getBearing() : fitBearing();
+  map.fitBounds(b, { padding: { top: 100, bottom: 90, left: 16, right: 16 }, bearing, duration: animate ? 600 : 0 });
+}
+
+/**
+ * Which way to turn the map so the whole maze fills the screen: 0 (north up), or 90 when the
+ * maze is much wider than tall and the screen is much taller than wide, like a wide maze on a phone.
+ * The compass needle shows where north is either way.
+ * @returns {number} Map bearing in degrees.
+ */
+function fitBearing() {
+  const xs = state.meta.field.map((p) => p[0]), ys = state.meta.field.map((p) => p[1]);
+  const mazeAspect = (Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys));
+  const screenAspect = map.getContainer().clientWidth / map.getContainer().clientHeight;
+  return mazeAspect > 1.3 && screenAspect < 0.8 ? 90 : 0;
 }
 
 // ---------- HUD ----------
