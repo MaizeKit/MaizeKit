@@ -46,3 +46,15 @@ th { color: var(--muted); font-weight: 600; }
   dl { grid-template-columns: 1fr; }
   table { display: block; overflow-x: auto; }
 }
+
+/* landing topic list and compact reference */
+.topic-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.topic-list a { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; text-decoration: none; color: var(--text); }
+.topic-list a:hover { border-color: var(--muted); }
+.topic-list span { color: var(--muted); font-size: 15px; }
+.doc-head .eyebrow a { color: var(--muted); text-decoration: none; }
+.symbols { list-style: none; padding: 0; margin: 0; }
+.symbols li { padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--muted); }
+.symbols li > code { color: var(--text); font-weight: 600; margin-right: 6px; }
+details { margin-top: 6px; font-size: 15px; }
+summary { cursor: pointer; color: var(--gold-deep); }
