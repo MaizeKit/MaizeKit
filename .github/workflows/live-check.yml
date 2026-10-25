@@ -1,0 +1,45 @@
+# Daily check that https://maizekit.github.io/ hasn't drifted from this repo:
+# it was built from the latest main, every page loads, and every maze's data is there.
+# A failed run means something is wrong; GitHub emails the repo's admins.
+name: Live site check
+
+on:
+  schedule:
+    - cron: "17 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Site is built from the latest main
+        run: |
+          live=$(curl -sf "https://maizekit.github.io/version.json?t=$(date +%s)" | python3 -c 'import json,sys; print(json.load(sys.stdin)["commit"])')
+          echo "live: $live"
+          echo "main: $GITHUB_SHA"
+          # Give a just-merged change time to publish before calling it drift.
+          if [ "$live" != "$GITHUB_SHA" ]; then
+            age=$(( $(date +%s) - $(git log -1 --format=%ct) ))
+            if [ "$age" -gt 3600 ]; then echo "::error::Live site is not built from main"; exit 1; fi
+            echo "main changed $age s ago; still publishing"
+          fi
+
+      - name: Pages load
+        run: |
+          fail=0
+          for p in / /docs/ /docs/configuration/ /docs/reference/ /robots.txt /sitemap-index.xml /sitemap-mazes.xml; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://maizekit.github.io$p")
+            echo "$code $p"; [ "$code" = 200 ] || fail=1
+          done
+          for farm in m/*/; do
+            for f in "" assets/maze.json assets/walk.png assets/maze.webp sign.html; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' "https://maizekit.github.io/$farm$f")
+              echo "$code /$farm$f"; [ "$code" = 200 ] || fail=1
+            done
+          done
+          exit $fail

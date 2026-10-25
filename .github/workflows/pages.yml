@@ -74,6 +74,13 @@ jobs:
           } > _site/sitemap-mazes.xml
           printf 'User-agent: *\nAllow: /\n\nSitemap: https://maizekit.github.io/sitemap-mazes.xml\nSitemap: https://maizekit.github.io/sitemap-index.xml\n' > _site/robots.txt
 
+      - name: Check links
+        run: python3 .github/scripts/check_links.py _site
+
+      - name: Version stamp
+        # Lets the daily live check confirm the site matches main.
+        run: printf '{"commit": "%s"}\n' "${{ github.sha }}" > _site/version.json
+
       - name: Publish to MaizeKit/maizekit.github.io
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
