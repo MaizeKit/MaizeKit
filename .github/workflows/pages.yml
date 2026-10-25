@@ -79,7 +79,8 @@ jobs:
 
       - name: Version stamp
         # Lets the daily live check confirm the site matches main.
-        run: printf '{"commit": "%s"}\n' "${{ github.sha }}" > _site/version.json
+        run: |
+          printf '{"commit": "%s"}\n' "$GITHUB_SHA" > _site/version.json
 
       - name: Publish to MaizeKit/maizekit.github.io
         if: github.ref == 'refs/heads/main'
