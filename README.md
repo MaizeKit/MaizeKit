@@ -51,3 +51,9 @@ Every maze gets a printable sign with a QR code for its address at
 
 `.github/workflows/pages.yml` builds every maze and the docs, and publishes the site on
 every push to `main`.
+
+## License
+
+MaizeKit is [MIT licensed](LICENSE). The bundled [MapLibre GL JS](https://github.com/maplibre/maplibre-gl-js)
+(BSD-3-Clause) and [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT) keep their own
+licenses. Maze photos in `m/` belong to their farms.
