@@ -399,16 +399,18 @@ function fitMaze(animate = true) {
 }
 
 /**
- * Which way to turn the map so the whole maze fills the screen: 0 (north up), or 90 when the
- * maze is much wider than tall and the screen is much taller than wide, like a wide maze on a phone.
- * The compass needle shows where north is either way.
+ * Which way to turn the map when showing the whole maze: the way the maze's own map faces,
+ * so the app matches the sign at the entrance. If that leaves a wide map small on a tall
+ * screen (or a tall one on a wide screen), it turns a further 90 degrees to fill the screen.
+ * The compass needle shows where north is, and the compass button turns it north-up.
  * @returns {number} Map bearing in degrees.
  */
 function fitBearing() {
-  const xs = state.meta.field.map((p) => p[0]), ys = state.meta.field.map((p) => p[1]);
-  const mazeAspect = (Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys));
-  const screenAspect = map.getContainer().clientWidth / map.getContainer().clientHeight;
-  return mazeAspect > 1.3 && screenAspect < 0.8 ? 90 : 0;
+  const base = state.meta.signBearing ?? 0;
+  const sign = state.meta.signAspect ?? 1;
+  const screen = map.getContainer().clientWidth / map.getContainer().clientHeight;
+  const mismatched = (sign > 1.3 && screen < 0.8) || (sign < 0.77 && screen > 1.3);
+  return (base + (mismatched ? 270 : 0)) % 360;
 }
 
 // ---------- HUD ----------

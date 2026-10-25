@@ -170,11 +170,16 @@ if connected < MIN_CONNECTED:
 for w in warnings:
     print("warning:", w)
 
+_top, _bottom = to_out([(W / 2, H * 0.4), (W / 2, H * 0.6)])
+sign_bearing = round(math.degrees(math.atan2(_top[0] - _bottom[0], _bottom[1] - _top[1])) % 360, 1)
 field_out = to_out(FIELD).round(1).tolist()
 points_out = {k: dict(zip(("x", "y"), to_out([p])[0].round(1).tolist())) for k, p in POINTS.items()}
 meta = {
     "name": cfg["name"],
     "notice": " ".join([cfg.get("notice", "")] + warnings).strip(),
+    # Compass direction the top of the map photo faces, so the app can open turned to match it.
+    "signBearing": sign_bearing,
+    "signAspect": W / H,
     "width": OW, "height": OH, "res": RES, "cell": CELL,
     "gridWidth": OW // CELL, "gridHeight": OH // CELL, "distScale": DIST_SCALE,
     # top-left corner of the raster and metres-per-degree used to build it
