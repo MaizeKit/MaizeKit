@@ -8,6 +8,7 @@ const live = '/m/moore-family-farm/';
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="theme-color" content="#000000">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MaizeKit</title>
   <meta name="description" content="Turn a photo of a corn maze map into a phone app that shows where you are and the way out.">
@@ -125,37 +126,22 @@ const live = '/m/moore-family-farm/';
 </html>
 
 <style is:global>
+  /* Always dark. */
   :root {
-    --text: #1d1d1f;
-    --muted: #6e6e73;
-    --bg: #ffffff;
-    --soft: #f5f5f7;
+    --text: #f5f5f7;
+    --muted: #a1a1a6;
+    --bg: #000000;
+    --soft: #101012;
     --gold: #f5a11a;
     --gold-deep: #e07b0a;
-    --link: #0066cc;
-    --link-hover: #0077ed;
-    --tile: #ffffff;
-    --nav: rgba(255, 255, 255, 0.8);
-    --line: rgba(0, 0, 0, 0.08);
-    --footer-line: #d2d2d7;
-    --qr-pad: transparent;
-    color-scheme: light dark;
-  }
-  /* Dark mode follows the visitor's system setting. */
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --text: #f5f5f7;
-      --muted: #a1a1a6;
-      --bg: #000000;
-      --soft: #101012;
-      --link: #2997ff;
-      --link-hover: #47a6ff;
-      --tile: #1c1c1e;
-      --nav: rgba(22, 22, 23, 0.8);
-      --line: rgba(255, 255, 255, 0.1);
-      --footer-line: #2c2c2e;
-      --qr-pad: #ffffff;
-    }
+    --link: #2997ff;
+    --link-hover: #47a6ff;
+    --tile: #1c1c1e;
+    --nav: rgba(22, 22, 23, 0.8);
+    --line: rgba(255, 255, 255, 0.1);
+    --footer-line: #2c2c2e;
+    --qr-pad: #ffffff;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
@@ -215,8 +201,8 @@ const live = '/m/moore-family-farm/';
   .screen { padding-top: 44px; }
   .island { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 92px; height: 27px; border-radius: 20px; background: #000; }
 
-  .dark { background: #000; color: #f5f5f7; padding-top: 200px; }
-  @media (prefers-color-scheme: dark) { .dark { background: #0b0b0c; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); } }
+  .dark { background: #0b0b0c; color: #f5f5f7; padding-top: 200px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
   .dark .sub { color: #a1a1a6; }
   .steps { list-style: none; padding: 0; max-width: 980px; margin: 64px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; text-align: left; }
   .frame { aspect-ratio: 1; border-radius: 24px; overflow: hidden; background: #1d1d1f; display: grid; place-items: center; margin-bottom: 22px; }
