@@ -1,4 +1,4 @@
-# Publishes the website, with DocC documentation generated from the latest MaizeKit kit.
+# Publishes the website, with Starlight docs generated from the latest MaizeKit kit.
 name: Publish site
 
 on:
@@ -34,23 +34,22 @@ jobs:
           fetch-depth: 0 # tags, for the version shown in the docs
 
       - name: Copy the website
-        run: rsync -a --exclude _kit --exclude _site --exclude .git --exclude .github --exclude tools --exclude MaizeKit.docc ./ _site/
+        run: rsync -a --exclude _kit --exclude _site --exclude .git --exclude .github --exclude tools --exclude docs ./ _site/
 
-      - name: Write the DocC catalog from the kit
+      - name: Write the docs pages from the kit
         run: python3 tools/build_docs.py _kit
 
-      - name: Build docs with DocC
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Build docs with Starlight
+        working-directory: docs
         run: |
-          docker run --rm -v "$PWD:/w" -w /w swift:6.0 \
-            docc convert MaizeKit.docc --additional-symbol-graph-dir symbol-graphs \
-              --fallback-display-name MaizeKit \
-              --fallback-bundle-identifier io.github.maizekit \
-              --transform-for-static-hosting --hosting-base-path docs \
-              --output-path _site/docs
-          sudo chown -R "$USER" _site
-          cp tools/docs-tweaks.css _site/docs/css/maizekit.css
-          find _site/docs -name index.html -exec sed -i 's#</head>#<link href="/docs/css/maizekit.css" rel="stylesheet"></head>#' {} +
-          cp docs-redirect.html _site/docs/index.html
+          npm ci
+          npm run build
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

@@ -1,5 +1,5 @@
-"""Generates a DocC documentation catalog (MaizeKit.docc) from a checkout of the MaizeKit kit repo.
-Render it with Apple's DocC:  docc convert MaizeKit.docc --output-path _site/docs ...
+"""Generates the Starlight docs pages (docs/src/content/docs) from a checkout of the MaizeKit kit repo.
+Then build the site with:  cd docs && npm ci && npm run build
 
 Everything on the page comes from the kit itself, so the docs always match the code:
   README.md                 Overview and Getting started
@@ -150,21 +150,21 @@ def anchor(s):
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
 
-# ---------- DocC catalog ----------
-# Apple's documentation compiler (DocC) renders the catalog. Every article is generated
-# from the kit, so nothing here is written by hand except the topic names.
+# ---------- Starlight pages ----------
+# Every page is generated from the kit, so the docs always match the code.
 
-OUT = Path("MaizeKit.docc")
+OUT = Path("docs/src/content/docs")
 
 
-def article(name, title, abstract, body):
-    (OUT / f"{name}.md").write_text(f"# {title}\n\n{abstract}\n\n{body.strip()}\n")
+def article(slug, title, description, body):
+    front = f"---\ntitle: {json.dumps(title)}\ndescription: {json.dumps(description)}\n---\n\n"
+    (OUT / f"{slug}.md").write_text(front + body.strip() + "\n")
 
 
 def md_table(head, rows):
     esc_cell = lambda c: str(c).replace("|", "\\|").replace("\n", " ")
     return "\n".join(["| " + " | ".join(head) + " |", "|" + "---|" * len(head)] +
-                     ["| " + " | ".join(esc_cell(c) for c in r) + " |" for r in rows])
+                      ["| " + " | ".join(esc_cell(c) for c in r) + " |" for r in rows])
 
 
 def build():
@@ -186,59 +186,38 @@ def build():
     errors = parse_errors(app)
     source = lambda path: f"{REPO}/blob/main/{path}"
 
-    if OUT.exists():
-        for f in OUT.glob("*.md"):
-            f.unlink()
-    (OUT / "Resources").mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
+    for f in OUT.glob("*.md"):
+        f.unlink()
 
-    available = f'  @Available("MaizeKit", introduced: "{version}")\n' if version else ""
     overview = readme_section(readme, "Overview").strip()
-    # Titled ``MaizeKit`` so it attaches to the module in symbol-graphs/, which makes DocC
-    # render it as a Framework page, the same as Apple's kits.
-    (OUT / "MaizeKit.md").write_text(f"""# ``MaizeKit``
+    release = f"Current release: **MaizeKit {version}**. " if version else ""
+    article("index", "MaizeKit", abstract, f"""{overview}
 
-@Metadata {{
-  @PageImage(purpose: icon, source: "maizekit-icon", alt: "MaizeKit icon")
-{available}}}
+{release}Works in Safari on iPhone and Chrome on Android.
 
-{abstract}
-
-## Overview
-
-{overview}
-
-## Topics
-
-### Essentials
-
-- <doc:GettingStarted>
-- <doc:Configuration>
-
-### Visitors
-
-- <doc:Errors>
-- <doc:Settings>
-
-### Contributing
-
-- <doc:Reference>
-- <doc:BuildTool>
+- [Getting started](getting-started/): make a site for your maze.
+- [Configuration](configuration/): every field in `maze.config.json`.
+- [Errors](errors/): the messages visitors can see.
+- [Settings](settings/): values in `app.js` you can tune.
+- [Reference](reference/): every function in `app.js`.
+- [Build tool](build-tool/): how a photo becomes a map.
 """)
 
-    article("GettingStarted", "Getting Started", "Make a site for your maze in six steps.",
+    article("getting-started", "Getting started", "Make a site for your maze in six steps.",
             readme_section(readme, "Getting started") + "\n## Entrance sign\n\n" + readme_section(readme, "Entrance sign"))
 
     rows = [(f"`{k}`", "Required" if k in schema.get("required", []) else "Optional", p.get("description", ""))
             for k, p in schema["properties"].items()]
-    article("Configuration", "Configuration", "Every field in `maze.config.json`.",
+    article("configuration", "Configuration", "Every field in maze.config.json.",
             schema.get("description", "") + "\n\n" + md_table(["Field", "", "What it is"], rows) +
             f"\n\nStart from [`maze.config.example.json`]({source('maze.config.example.json')}). "
             f"The format is defined in [`maze.config.schema.json`]({source('maze.config.schema.json')}).")
 
-    article("Errors", "Errors", "The messages visitors can see, and what they mean.",
+    article("errors", "Errors", "The messages visitors can see, and what they mean.",
             md_table(["Message", "What it tells the visitor"], [(f"**{t}**", s) for t, s in errors]))
 
-    article("Settings", "Settings", "Values in `app.js` you can tune.",
+    article("settings", "Settings", "Values in app.js you can tune.",
             md_table(["Name", "Default", "What it does"], [(f"`{s['name']}`", f"`{s['value']}`", s["summary"]) for s in settings]))
 
     ref = [f"From the doc comments in [`app.js`]({source('app.js')}), in file order."]
@@ -250,12 +229,12 @@ def build():
                 ref.append("\n".join(f"- term `{n}`: {d} ({t})".replace("- term ", "- ") for t, n, d in sym["params"]) + "\n")
             if sym["returns"]:
                 ref.append(f"Returns `{sym['returns'][0]}`. {sym['returns'][1]}\n")
-    article("Reference", "Reference", "Every function in `app.js`, for contributors.", "\n".join(ref))
+    article("reference", "Reference", "Every function in app.js, for contributors.", "\n".join(ref))
 
-    article("BuildTool", "Build Tool", "How `tools/build_assets.py` turns a photo into a map.",
+    article("build-tool", "Build tool", "How tools/build_assets.py turns a photo into a map.",
             f"```\n{build_doc}\n```\n\n[View the source]({source('tools/build_assets.py')})")
 
-    print(f"wrote {OUT}/ ({len(list(OUT.glob('*.md')))} articles)")
+    print(f"wrote {len(list(OUT.glob('*.md')))} pages to {OUT}/")
 
 
 build()

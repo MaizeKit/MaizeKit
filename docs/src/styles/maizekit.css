@@ -1,0 +1,11 @@
+/* MaizeKit gold instead of Starlight's default accent. */
+:root {
+	--sl-color-accent-low: #3a2604;
+	--sl-color-accent: #e08a10;
+	--sl-color-accent-high: #ffd78a;
+}
+:root[data-theme='light'] {
+	--sl-color-accent-low: #fde9c4;
+	--sl-color-accent: #b4610a;
+	--sl-color-accent-high: #5a3205;
+}

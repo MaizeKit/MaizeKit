@@ -1,4 +1,6 @@
 .DS_Store
 _kit/
 _site/
-MaizeKit.docc/*.md
+docs/node_modules/
+docs/.astro/
+docs/src/content/docs/*.md
