@@ -14,8 +14,11 @@ const DEMO_WALK_MPS = 1.2;
 /** How far simulated GPS fixes wander from the true spot in demo mode (metres, one standard deviation). */
 const DEMO_GPS_NOISE_M = 3;
 
-/** Browser storage key for the user's Fix my spot correction. */
-const STORE_KEY = 'maze-offset-v2';
+/** A Fix my spot correction bigger than this (metres) is a mistake, not GPS error, so it's ignored. */
+const MAX_OFFSET_M = 40;
+
+/** Browser storage key for the user's Fix my spot correction, one per maze. */
+const STORE_KEY = 'maze-offset-v3:' + location.pathname;
 
 const $ = (id) => document.getElementById(id);
 
@@ -108,6 +111,7 @@ function imageCorners() {
  * Saves the Fix my spot correction to browser storage.
  */
 function saveOffset() {
+  if (state.demo) return; // demo positions are simulated; never keep a correction from them
   try { localStorage.setItem(STORE_KEY, JSON.stringify(state.offset)); } catch (_) {}
 }
 /**
@@ -116,7 +120,7 @@ function saveOffset() {
 function loadOffset() {
   try {
     const o = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (o && isFinite(o.e) && isFinite(o.n)) state.offset = o;
+    if (o && isFinite(o.e) && isFinite(o.n) && Math.hypot(o.e, o.n) <= MAX_OFFSET_M) state.offset = o;
   } catch (_) {}
 }
 
@@ -693,11 +697,13 @@ map.on('click', (e) => {
     // Shift the maze so the tapped spot sits under the GPS fix (running average over taps).
     const g = imgToGround(u, v);
     const k = Math.min(state.offset.taps, 4);
-    state.offset = {
+    const next = {
       e: state.offset.e + (state.gps.e - g.e) / (k + 1),
       n: state.offset.n + (state.gps.n - g.n) / (k + 1),
       taps: state.offset.taps + 1,
     };
+    // A tap far from where GPS says you are means you're elsewhere, not that the map is off.
+    if (Math.hypot(next.e, next.n) <= MAX_OFFSET_M) state.offset = next;
     saveOffset();
     map.getSource('maze').setCoordinates(imageCorners());
       drawMarks();
@@ -807,7 +813,9 @@ async function boot() {
   fitMaze(false);
   setHud('', 'Finding your location…');
   const demo = new URLSearchParams(location.search).get('demo');
-  if (demo !== null) {
+  state.demo = demo !== null;
+  if (state.demo) {
+    state.offset = { e: 0, n: 0, taps: 0 };
     $('notice').textContent = 'Demo: a simulated walk out of the maze.';
     $('notice').hidden = false;
     startDemo(Math.max(1, Number(demo) || 6));

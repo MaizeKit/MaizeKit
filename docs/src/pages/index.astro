@@ -79,18 +79,16 @@ const live = '/m/moore-family-farm/';
       <div class="sci">
         <figure class="sci-fig">
           <img src="/brand/paths-moore.png" alt="Moore Family Farm's maze as MaizeKit sees it: every path in gold, brighter toward the middle of each path" width="1240" height="980" loading="lazy">
-          <figcaption>Moore Family Farm, as the router sees it. Brighter is further from the corn.</figcaption>
+          <figcaption>Moore Family Farm, as the router sees it.</figcaption>
         </figure>
         <ol class="sci-steps">
-          <li><b>Learn the corn.</b> Most of a maze is corn, so the typical colour inside the field <em>is</em> the corn colour.</li>
-          <li><b>Measure the difference.</b> Every pixel gets a distance from that colour. Paths stand out, lighter or darker.</li>
-          <li><b>Split three ways.</b> Corn, light paths, dark paths: a three-class version of Otsu's method finds the cut-offs.</li>
-          <li><b>Ignore the gaps.</b> Anything narrower than 1.2&nbsp;m, the space between corn rows, isn't a path.</li>
-          <li><b>Check it connects.</b> If under 90% of the paths reach the exit, the maze page tells visitors some routes may be missing.</li>
-          <li><b>Route down the middle.</b> Walking distance from the exit is worked out once, favouring the centre of each path, so the way out is instant from anywhere.</li>
+          <li><b>Learn the corn.</b> Most of a maze is corn, so its typical colour is the corn.</li>
+          <li><b>Find the paths.</b> Anything clearly different, lighter or darker, is path.</li>
+          <li><b>Drop the noise.</b> Gaps too narrow to walk, like the space between rows, are ignored.</li>
+          <li><b>Route down the middle.</b> Every route keeps to the centre of the path.</li>
         </ol>
       </div>
-      <p class="sci-note">Steps 1–4 are for aerial photos. Painted signs like Moore's use a simpler colour rule. <a href="/docs/reference/">See the code</a></p>
+      <p class="sci-note">How aerial photos are read. <a href="/docs/reference/">See the code</a></p>
     </section>
 
     <section class="features">
