@@ -14,7 +14,7 @@ export default defineConfig({
 			logo: { src: './src/assets/maizekit-icon.svg' },
 			favicon: '/favicon.svg',
 			customCss: ['./src/styles/maizekit.css'],
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/MaizeKit/maizekit' }],
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/MaizeKit/MaizeKit' }],
 			sidebar: [
 				{ label: 'Essentials', items: ['getting-started', 'configuration'] },
 				{ label: 'Visitors', items: ['errors', 'settings'] },

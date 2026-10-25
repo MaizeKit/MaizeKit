@@ -1,5 +1,7 @@
-# Builds every maze, the website and the docs, and publishes them to GitHub Pages.
-# On pull requests it only builds, so a broken maze is caught before it's merged.
+# Builds every maze, the website and the docs, and publishes them to maizekit.github.io.
+# The built site is pushed to the MaizeKit/maizekit.github.io repo, which GitHub serves at
+# the bare address; this repo keeps the source. On pull requests it only builds, so a
+# broken maze is caught before it's merged.
 name: Publish site
 
 on:
@@ -10,11 +12,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: publish-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -65,17 +65,15 @@ jobs:
           python3 docs/build.py
           cd docs && npm ci && npm run build
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Publish to MaizeKit/maizekit.github.io
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: _site
-
-  publish:
-    if: github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - id: deploy
-        uses: actions/deploy-pages@v4
+          deploy_key: ${{ secrets.PAGES_DEPLOY_KEY }}
+          external_repository: MaizeKit/maizekit.github.io
+          publish_branch: main
+          publish_dir: ./_site
+          force_orphan: true # the site repo holds only the latest build
+          user_name: MaizeKit
+          user_email: github-actions[bot]@users.noreply.github.com
+          full_commit_message: Publish ${{ github.sha }} from MaizeKit/MaizeKit

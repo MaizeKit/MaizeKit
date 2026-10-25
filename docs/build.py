@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent  # the monorepo
-REPO = "https://github.com/MaizeKit/maizekit.github.io"
+REPO = "https://github.com/MaizeKit/MaizeKit"
 
 esc = html.escape
 

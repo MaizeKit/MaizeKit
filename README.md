@@ -49,8 +49,9 @@ Every maze gets a printable sign with a QR code for its address at
 | `docs/` | Documentation ([Starlight](https://starlight.astro.build/)). `docs/build.py` writes its pages from the code. |
 | `brand/` | Icon, favicon, wordmark, badge and website images. |
 
-`.github/workflows/pages.yml` builds every maze and the docs, and publishes the site on
-every push to `main`.
+`.github/workflows/pages.yml` builds every maze and the docs on every push to `main`, and
+publishes the result to [MaizeKit/maizekit.github.io](https://github.com/MaizeKit/maizekit.github.io),
+which serves https://maizekit.github.io/.
 
 ## License
 
