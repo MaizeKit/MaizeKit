@@ -17,6 +17,9 @@ const DEMO_GPS_NOISE_M = 3;
 /** A Fix my spot correction bigger than this (metres) is a mistake, not GPS error, so it's ignored. */
 const MAX_OFFSET_M = 40;
 
+/** How long (ms) after the user pans or zooms before the map frames them and the exit again. */
+const HANDS_OFF_MS = 15000;
+
 /** Browser storage key for the user's Fix my spot correction, one per maze. */
 const STORE_KEY = 'maze-offset-v3:' + location.pathname;
 
@@ -33,6 +36,8 @@ const state = {
   mode: 'north', // 'north' | 'track'
   compass: null,
   route: null, // locked route, see routeFor()
+  framedAt: 0, // last time the map was framed on you and the exit
+  handsOffUntil: 0, // don't reframe until then: the user is moving the map themselves
 };
 
 // ---------- coordinates ----------
@@ -595,6 +600,21 @@ function refresh() {
   }
 
   if (state.mode === 'track' && pos.kind === 'gps') map.easeTo({ center: lonlat, duration: 500 });
+  else frameRoute(coords);
+}
+
+/**
+ * Keeps you, the route and the exit on screen, zoomed in as close as they all fit. Reframes at
+ * most every few seconds, and not while the user is moving the map themselves.
+ * @param {Array<[number, number]>} coords The route from you to the exit, as [lon, lat].
+ */
+function frameRoute(coords) {
+  const now = Date.now();
+  if (state.picking || now < state.handsOffUntil || now - state.framedAt < 3000) return;
+  state.framedAt = now;
+  const b = new maplibregl.LngLatBounds();
+  coords.forEach((c) => b.extend(c));
+  map.fitBounds(b, { padding: { top: 140, bottom: 110, left: 40, right: 40 }, bearing: map.getBearing(), maxZoom: 19.5, duration: 900 });
 }
 
 // ---------- sensors ----------
@@ -713,10 +733,14 @@ map.on('click', (e) => {
 
 // Dragging the map in track mode drops back to north-up so it doesn't fight the user.
 map.on('dragstart', () => { if (state.mode === 'track') setMode('north'); });
+// Pans, pinches and scroll-zooms by the user (not our own camera moves) pause auto-framing.
+for (const ev of ['dragstart', 'zoomstart', 'rotatestart']) {
+  map.on(ev, (e) => { if (e.originalEvent) state.handsOffUntil = Date.now() + HANDS_OFF_MS; });
+}
 map.on('zoomend', () => refresh());
 
 $('btn-mode').addEventListener('click', () => setMode(state.mode === 'north' ? 'track' : 'north'));
-$('btn-maze').addEventListener('click', () => fitMaze());
+$('btn-maze').addEventListener('click', () => { state.handsOffUntil = Date.now() + HANDS_OFF_MS; fitMaze(); });
 
 // Long-press "Fix my spot" for 2 s to clear the position correction.
 let resetTimer = null;
