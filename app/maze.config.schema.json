@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "maze.config.json",
+  "description": "Everything specific to one maze. Pixel coordinates are on the map after it's straightened to boardSize; the build saves that image as assets/sign-upright.jpg so you can read them off.",
+  "type": "object",
+  "required": [
+    "name",
+    "photo",
+    "board",
+    "boardSize",
+    "field",
+    "openingEdge",
+    "points",
+    "ground"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The maze's name. Shown as the page title and on the entrance sign.",
+      "examples": [
+        "Moore Family Farm Corn Maze"
+      ]
+    },
+    "year": {
+      "type": "integer",
+      "description": "Optional. The season this map is for. Replace the photo and config each year; the farm's link stays the same.",
+      "examples": [
+        2026
+      ]
+    },
+    "photo": {
+      "type": "string",
+      "description": "Path to a straight-on photo of the maze map.",
+      "examples": [
+        "sign-photo.png"
+      ]
+    },
+    "board": {
+      "type": "array",
+      "description": "Four corners of the map board in the original photo: top-left, top-right, bottom-right, bottom-left.",
+      "examples": [
+        [
+          [
+            639,
+            1356
+          ],
+          [
+            617,
+            274
+          ],
+          [
+            1762,
+            270
+          ],
+          [
+            1732,
+            1392
+          ]
+        ]
+      ]
+    },
+    "boardSize": {
+      "type": "array",
+      "description": "Width and height to straighten the board to, in pixels.",
+      "examples": [
+        [
+          1100,
+          1130
+        ]
+      ]
+    },
+    "field": {
+      "type": "array",
+      "description": "Outline of the corn field on the straightened map, as [x, y] points. Paths are the light areas inside it.",
+      "examples": [
+        [
+          [
+            2,
+            4
+          ],
+          [
+            1054,
+            4
+          ],
+          [
+            838,
+            1072
+          ],
+          [
+            240,
+            1092
+          ]
+        ]
+      ]
+    },
+    "openingEdge": {
+      "type": "array",
+      "description": "Two points on the field edge where the entrance and exit are. A walkable strip just outside this edge connects the openings.",
+      "examples": [
+        [
+          [
+            240,
+            1092
+          ],
+          [
+            838,
+            1072
+          ]
+        ]
+      ]
+    },
+    "hide": {
+      "type": "array",
+      "description": "Optional. Circles to ignore, such as a logo printed over the field.",
+      "examples": [
+        [
+          {
+            "circle": [
+              955,
+              995,
+              128
+            ]
+          }
+        ]
+      ]
+    },
+    "points": {
+      "type": "object",
+      "description": "Entrance and exit on the straightened map. The app routes to the exit.",
+      "required": [
+        "entrance",
+        "exit"
+      ],
+      "examples": [
+        {
+          "entrance": [
+            486,
+            1086
+          ],
+          "exit": [
+            419,
+            1088
+          ]
+        }
+      ]
+    },
+    "ground": {
+      "type": "array",
+      "description": "Four field corners on the map (sign) and where they are in the real world (lat, lon), for example read off satellite imagery. Used to place the map on the ground.",
+      "examples": [
+        [
+          {
+            "sign": [
+              1054,
+              4
+            ],
+            "lat": 42.570623,
+            "lon": -76.502556
+          }
+        ]
+      ]
+    }
+  }
+}

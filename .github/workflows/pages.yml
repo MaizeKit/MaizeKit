@@ -1,11 +1,11 @@
-# Publishes the website, with Starlight docs generated from the latest MaizeKit kit.
+# Builds every maze, the website and the docs, and publishes them to GitHub Pages.
+# On pull requests it only builds, so a broken maze is caught before it's merged.
 name: Publish site
 
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: "0 9 * * *" # daily, to pick up kit changes
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -14,30 +14,45 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Get the kit
-        uses: actions/checkout@v4
         with:
-          repository: MaizeKit/maizekit
-          path: _kit
-          fetch-depth: 0 # tags, for the version shown in the docs
+          fetch-depth: 0 # tags, for the release shown in the docs
 
-      - name: Copy the website
-        run: rsync -a --exclude _kit --exclude _site --exclude .git --exclude .github --exclude tools --exclude docs ./ _site/
+      - name: Website
+        run: |
+          mkdir -p _site
+          cp -R index.html style.css brand _site/
 
-      - name: Write the docs pages from the kit
-        run: python3 tools/build_docs.py _kit
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Mazes
+        # Each m/<farm>/ becomes _site/m/<farm>/: the shared app plus that farm's map.
+        # build.py stops with an error if the config is incomplete or the exit can't be reached.
+        run: |
+          pip install opencv-python-headless numpy
+          for farm in m/*/; do
+            out="_site/$farm"
+            mkdir -p "$out"
+            cp -R app/. "$out"
+            cp "$farm"* "$out"
+            (cd "$out" && python build.py)
+            rm "$out/build.py" "$out/maze.config.schema.json"
+          done
+
+      - name: Old Moore Family Farm link
+        # Printed signs from before the move point here; send them to the new address.
+        run: |
+          mkdir -p _site/moore-family-farm
+          printf '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/m/moore-family-farm/"><a href="/m/moore-family-farm/">Moore Family Farm Corn Maze</a>\n' > _site/moore-family-farm/index.html
 
       - uses: actions/setup-node@v4
         with:
@@ -45,15 +60,22 @@ jobs:
           cache: npm
           cache-dependency-path: docs/package-lock.json
 
-      - name: Build docs with Starlight
-        working-directory: docs
+      - name: Docs
         run: |
-          npm ci
-          npm run build
+          python3 docs/build.py
+          cd docs && npm ci && npm run build
 
-      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  publish:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v4

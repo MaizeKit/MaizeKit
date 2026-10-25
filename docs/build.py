@@ -1,14 +1,12 @@
-"""Generates the Starlight docs pages (docs/src/content/docs) from a checkout of the MaizeKit kit repo.
-Then build the site with:  cd docs && npm ci && npm run build
+"""Writes the Starlight docs pages (docs/src/content/docs) from the code in this repo,
+so the docs always match it:
+  README.md                     Overview, Getting started, Entrance sign
+  app/maze.config.schema.json   Configuration
+  app/app.js                    Errors (alert messages), Settings and Reference (doc comments)
+  app/build.py                  Build tool
+  git tags                      Release shown on the front page
 
-Everything on the page comes from the kit itself, so the docs always match the code:
-  README.md                 Overview and Getting started
-  maze.config.schema.json   Configuration
-  app.js                    Errors (alert messages), Settings and Reference (doc comments)
-  tools/build_assets.py     Build tool
-  git tags                  Availability
-
-Usage: python tools/build_docs.py path/to/maizekit
+Usage: python3 docs/build.py   then   cd docs && npm ci && npm run build
 Standard library only.
 """
 import html
@@ -18,8 +16,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-KIT = Path(sys.argv[1] if len(sys.argv) > 1 else "../maizekit")
-REPO = "https://github.com/MaizeKit/maizekit"
+ROOT = Path(__file__).resolve().parent.parent  # the monorepo
+REPO = "https://github.com/MaizeKit/maizekit.github.io"
 
 esc = html.escape
 
@@ -153,7 +151,7 @@ def anchor(s):
 # ---------- Starlight pages ----------
 # Every page is generated from the kit, so the docs always match the code.
 
-OUT = Path("docs/src/content/docs")
+OUT = ROOT / "docs/src/content/docs"
 
 
 def article(slug, title, description, body):
@@ -168,14 +166,14 @@ def md_table(head, rows):
 
 
 def build():
-    readme = (KIT / "README.md").read_text()
-    schema = json.loads((KIT / "maze.config.schema.json").read_text())
-    app = (KIT / "app.js").read_text()
-    build_doc = re.match(r'"""(.*?)"""', (KIT / "tools/build_assets.py").read_text(), re.S).group(1).strip()
+    readme = (ROOT / "README.md").read_text()
+    schema = json.loads((ROOT / "app/maze.config.schema.json").read_text())
+    app = (ROOT / "app/app.js").read_text()
+    build_doc = re.match(r'"""(.*?)"""', (ROOT / "app/build.py").read_text(), re.S).group(1).strip()
 
     def git(*args):
         try:
-            return subprocess.run(["git", "-C", str(KIT), *args], capture_output=True, text=True, check=True).stdout.strip()
+            return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, text=True, check=True).stdout.strip()
         except Exception:
             return ""
 
@@ -211,8 +209,8 @@ def build():
             for k, p in schema["properties"].items()]
     article("configuration", "Configuration", "Every field in maze.config.json.",
             schema.get("description", "") + "\n\n" + md_table(["Field", "", "What it is"], rows) +
-            f"\n\nStart from [`maze.config.example.json`]({source('maze.config.example.json')}). "
-            f"The format is defined in [`maze.config.schema.json`]({source('maze.config.schema.json')}).")
+            f"\n\nStart from [an example config]({source('m/moore-family-farm/maze.config.json')}). "
+            f"The format is defined in [`maze.config.schema.json`]({source('app/maze.config.schema.json')}).")
 
     article("errors", "Errors", "The messages visitors can see, and what they mean.",
             md_table(["Message", "What it tells the visitor"], [(f"**{t}**", s) for t, s in errors]))
@@ -220,7 +218,7 @@ def build():
     article("settings", "Settings", "Values in app.js you can tune.",
             md_table(["Name", "Default", "What it does"], [(f"`{s['name']}`", f"`{s['value']}`", s["summary"]) for s in settings]))
 
-    ref = [f"From the doc comments in [`app.js`]({source('app.js')}), in file order."]
+    ref = [f"From the doc comments in [`app.js`]({source('app/app.js')}), in file order."]
     for sec in sections:
         ref.append(f"\n## {sec['title']}\n")
         for sym in sec["symbols"]:
@@ -232,7 +230,7 @@ def build():
     article("reference", "Reference", "Every function in app.js, for contributors.", "\n".join(ref))
 
     article("build-tool", "Build tool", "How tools/build_assets.py turns a photo into a map.",
-            f"```\n{build_doc}\n```\n\n[View the source]({source('tools/build_assets.py')})")
+            f"```\n{build_doc}\n```\n\n[View the source]({source('app/build.py')})")
 
     print(f"wrote {len(list(OUT.glob('*.md')))} pages to {OUT}/")
 

@@ -1,6 +1,6 @@
 .DS_Store
-_kit/
 _site/
 docs/node_modules/
 docs/.astro/
 docs/src/content/docs/*.md
+__pycache__/
